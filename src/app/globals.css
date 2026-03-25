@@ -1,0 +1,53 @@
+@import "tailwindcss";
+
+@theme {
+  /* Action & Accent Colors (Soft Teal) */
+  --color-primary-50: #e6f8f2; 
+  --color-primary-100: #c0ebd8;
+  --color-primary-400: #3FBF9B;
+  --color-primary-500: #3FBF9B;
+  --color-primary-600: #309e7f;
+  --color-primary-900: #1b5948;
+
+  /* Custom Identity Colors */
+  --color-brand-blue: #1E2A38;
+  --color-brand-indigo: #3A4F7A;
+  --color-brand-sand: #F4EDE4;
+
+  /* Override internal Neutrals corresponding to 'slate' */
+  --color-slate-900: #0F1720;
+  --color-slate-800: #18222F;
+  --color-slate-700: #2A3A4D;
+  --color-slate-500: #9FB0C3;
+  --color-slate-400: #9FB0C3;
+
+  /* Root variables for app baseline */
+  --color-background: #0F1720;
+  --color-foreground: #E6EDF3;
+  --color-card: #18222F;
+  --color-card-foreground: #E6EDF3;
+  --color-border: #2A3A4D;
+  
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-heading: var(--font-outfit), ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+  }
+}
+
+/* Custom utility classes */
+@layer utilities {
+  .glass-panel {
+    background: rgba(23, 23, 23, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--color-border);
+  }
+}
