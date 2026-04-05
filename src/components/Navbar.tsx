@@ -11,105 +11,109 @@ export default function Navbar() {
   const pathname = usePathname();
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10);
-    };
+    const handleScroll = () => setIsScrolled(window.scrollY > 8);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  if (pathname === '/dashboard' || pathname.startsWith('/invoices')) return null;
+  const APP_ROUTES = ["/dashboard", "/invoices", "/upload", "/email", "/profile"];
+  if (APP_ROUTES.some((r) => pathname === r || pathname.startsWith(`${r}/`))) return null;
 
   const navLinks = [
     { name: "Features", href: "/features" },
-    { name: "Demo", href: "/demo" },
-    { name: "Pricing", href: "/pricing" },
+    { name: "Pricing",  href: "/pricing"  },
+    { name: "Demo",     href: "/demo"     },
   ];
 
   return (
     <header
-      className={`fixed top-0 w-full z-50 transition-all duration-300 border-b ${isScrolled
-        ? "bg-background/80 backdrop-blur-md border-border"
-        : "bg-transparent border-transparent"
-        }`}
+      className={`fixed top-0 w-full z-50 transition-all duration-200 ${
+        isScrolled
+          ? "bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-[0_1px_0_rgba(0,0,0,0.04)]"
+          : "bg-transparent border-b border-transparent"
+      }`}
     >
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 group">
-          <div className="w-8 h-8 rounded-lg bg-primary-600 flex items-center justify-center text-white font-bold group-hover:bg-primary-500 transition-colors">
-            <FileText size={18} />
+          <div className="w-7 h-7 rounded-md bg-slate-900 flex items-center justify-center">
+            <FileText size={13} className="text-white" />
           </div>
-          <span className="font-heading font-semibold text-lg tracking-tight">
-            Ledgix Invoice<span className="text-primary-500">.ai</span>
+          <span className="font-heading font-bold text-[15px] tracking-tight text-slate-900">
+            Ledgix
           </span>
         </Link>
 
         {/* Desktop Nav */}
-        <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-300">
+        <nav className="hidden md:flex items-center gap-6">
           {navLinks.map((link) => (
             <Link
               key={link.name}
               href={link.href}
-              className={`hover:text-white transition-colors ${pathname === link.href ? "text-white" : ""
-                }`}
+              className={`text-[13px] font-medium transition-colors ${
+                pathname === link.href
+                  ? "text-slate-900"
+                  : "text-slate-500 hover:text-slate-900"
+              }`}
             >
               {link.name}
             </Link>
           ))}
         </nav>
 
-        {/* Auth Buttons */}
-        <div className="hidden md:flex items-center gap-4">
+        {/* Auth buttons */}
+        <div className="hidden md:flex items-center gap-3">
           <Link
             href="/login"
-            className="text-sm font-medium text-slate-300 hover:text-white transition-colors"
+            className="text-[13px] font-medium text-slate-500 hover:text-slate-900 transition-colors"
           >
             Log in
           </Link>
           <Link
             href="/register"
-            className="text-sm font-medium bg-white text-black px-4 py-2 rounded-full hover:bg-slate-200 transition-colors"
+            className="text-[13px] font-semibold bg-slate-900 text-white px-4 py-1.5 rounded-full hover:bg-slate-800 transition-colors"
           >
-            Sign up
+            Get started free
           </Link>
         </div>
 
-        {/* Mobile Toggle */}
+        {/* Mobile toggle */}
         <button
-          className="md:hidden text-slate-300 hover:text-white"
+          className="md:hidden p-1.5 text-slate-500 hover:text-slate-900 transition-colors"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          aria-label="Toggle menu"
         >
-          {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
         </button>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-background border-b border-border absolute w-full top-16 left-0 flex flex-col p-4 gap-4 shadow-xl">
+        <div className="md:hidden bg-white border-b border-slate-200 absolute w-full top-16 left-0 flex flex-col p-4 gap-1 shadow-lg">
           {navLinks.map((link) => (
             <Link
               key={link.name}
               href={link.href}
               onClick={() => setMobileMenuOpen(false)}
-              className="text-lg font-medium text-slate-300 hover:text-white"
+              className="text-[15px] font-medium text-slate-600 hover:text-slate-900 px-3 py-2.5 rounded-lg hover:bg-slate-50 transition-colors"
             >
               {link.name}
             </Link>
           ))}
-          <div className="h-px bg-border my-2 w-full" />
+          <div className="h-px bg-slate-200 my-2" />
           <Link
             href="/login"
             onClick={() => setMobileMenuOpen(false)}
-            className="text-lg font-medium text-slate-300 hover:text-white"
+            className="text-[15px] font-medium text-slate-600 hover:text-slate-900 px-3 py-2.5 rounded-lg hover:bg-slate-50 transition-colors"
           >
             Log in
           </Link>
           <Link
             href="/register"
             onClick={() => setMobileMenuOpen(false)}
-            className="text-lg font-medium bg-primary-600 text-white px-4 py-3 rounded-lg text-center hover:bg-primary-500 mt-2"
+            className="text-[15px] font-semibold bg-slate-900 text-white px-4 py-3 rounded-xl text-center hover:bg-slate-800 transition-colors mt-1"
           >
-            Sign up Free
+            Get started free
           </Link>
         </div>
       )}

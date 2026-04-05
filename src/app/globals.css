@@ -1,33 +1,38 @@
 @import "tailwindcss";
 
 @theme {
-  /* Action & Accent Colors (Soft Teal) */
-  --color-primary-50: #e6f8f2; 
-  --color-primary-100: #c0ebd8;
-  --color-primary-400: #3FBF9B;
-  --color-primary-500: #3FBF9B;
-  --color-primary-600: #309e7f;
-  --color-primary-900: #1b5948;
+  /* Indigo — authority, precision, enterprise */
+  --color-primary-50:  #eef2ff;
+  --color-primary-100: #e0e7ff;
+  --color-primary-200: #c7d2fe;
+  --color-primary-300: #a5b4fc;
+  --color-primary-400: #818cf8;
+  --color-primary-500: #6366f1;
+  --color-primary-600: #4f46e5;
+  --color-primary-700: #4338ca;
+  --color-primary-800: #3730a3;
+  --color-primary-900: #312e81;
 
-  /* Custom Identity Colors */
-  --color-brand-blue: #1E2A38;
-  --color-brand-indigo: #3A4F7A;
-  --color-brand-sand: #F4EDE4;
+  /* Zinc neutral scale — warm, not blue-tinted */
+  --color-slate-50:  #fafafa;
+  --color-slate-100: #f4f4f5;
+  --color-slate-200: #e4e4e7;
+  --color-slate-300: #d4d4d8;
+  --color-slate-400: #a1a1aa;
+  --color-slate-500: #71717a;
+  --color-slate-600: #52525b;
+  --color-slate-700: #3f3f46;
+  --color-slate-800: #27272a;
+  --color-slate-900: #18181b;
+  --color-slate-950: #09090b;
 
-  /* Override internal Neutrals corresponding to 'slate' */
-  --color-slate-900: #0F1720;
-  --color-slate-800: #18222F;
-  --color-slate-700: #2A3A4D;
-  --color-slate-500: #9FB0C3;
-  --color-slate-400: #9FB0C3;
+  /* Semantic tokens */
+  --color-background:      #ffffff;
+  --color-foreground:      #0a0a0b;
+  --color-card:            #ffffff;
+  --color-card-foreground: #0a0a0b;
+  --color-border:          #e4e4e7;
 
-  /* Root variables for app baseline */
-  --color-background: #0F1720;
-  --color-foreground: #E6EDF3;
-  --color-card: #18222F;
-  --color-card-foreground: #E6EDF3;
-  --color-border: #2A3A4D;
-  
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
   --font-heading: var(--font-outfit), ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 }
@@ -39,15 +44,8 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
-  }
-}
-
-/* Custom utility classes */
-@layer utilities {
-  .glass-panel {
-    background: rgba(23, 23, 23, 0.7);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid var(--color-border);
+    font-feature-settings: "cv11", "ss01";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }

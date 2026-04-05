@@ -1,158 +1,506 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { motion } from "framer-motion";
-import { Search, Download, CheckCircle2, AlertCircle, Clock, ChevronDown } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import {
+    Search, ChevronDown, CheckCircle2, AlertCircle,
+    Clock, Loader2, FileText, UploadCloud, Eye, Play, Trash2, AlertTriangle,
+} from "lucide-react";
 import { toast } from "sonner";
+import { useSession } from "next-auth/react";
 import Sidebar from "@/components/Sidebar";
 import AppHeader from "@/components/AppHeader";
+import { useInvoiceSocket } from "@/hooks/useInvoiceSocket";
+import type { Invoice, InvoiceStatus } from "@/types/invoice";
 
-const ALL_INVOICES = [
-  { id: "INV-2024-001", vendor: "Acme Corp Software", amount: "$3,450.00", date: "Mar 24, 2024", status: "Approved" },
-  { id: "INV-2024-002", vendor: "AWS Services", amount: "$1,245.50", date: "Mar 23, 2024", status: "Pending" },
-  { id: "INV-2024-003", vendor: "Adobe Creative Cloud", amount: "$54.99", date: "Mar 22, 2024", status: "Approved" },
-  { id: "INV-2024-004", vendor: "Stripe Payments", amount: "$450.00", date: "Mar 21, 2024", status: "Duplicate" },
-  { id: "INV-2024-005", vendor: "Vercel Inc", amount: "$120.00", date: "Mar 20, 2024", status: "Approved" },
-  { id: "INV-2024-006", vendor: "Google Workspace", amount: "$72.00", date: "Mar 19, 2024", status: "Approved" },
-  { id: "INV-2024-007", vendor: "Figma Inc", amount: "$144.00", date: "Mar 18, 2024", status: "Rejected" },
-  { id: "INV-2024-008", vendor: "Notion Labs", amount: "$96.00", date: "Mar 17, 2024", status: "Pending" },
-  { id: "INV-2024-009", vendor: "Linear Orbit", amount: "$360.00", date: "Mar 16, 2024", status: "Approved" },
-  { id: "INV-2024-010", vendor: "Slack Technologies", amount: "$87.50", date: "Mar 15, 2024", status: "Pending" },
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000";
+
+// ── helpers ───────────────────────────────────────────────────────────────────
+
+function extractField(data: Invoice["extracted_data"], ...keys: string[]): string {
+    if (!data) return "—";
+    for (const key of keys) {
+        const entry = data[key];
+        if (entry && entry.value != null && entry.value !== "") return String(entry.value);
+    }
+    return "—";
+}
+
+function formatDate(iso: string) {
+    return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
+// ── status config ─────────────────────────────────────────────────────────────
+
+const STATUS_CONFIG: Record<InvoiceStatus, { label: string; className: string; icon: React.ReactNode }> = {
+    UPLOADED:          { label: "Uploaded",       className: "bg-slate-100 text-slate-600 border-slate-200",        icon: <FileText size={12} /> },
+    PROCESSING:        { label: "Processing",     className: "bg-blue-50 text-blue-600 border-blue-200",            icon: <Loader2 size={12} className="animate-spin" /> },
+    PROCESSED:         { label: "Processed",      className: "bg-cyan-50 text-cyan-700 border-cyan-200",            icon: <CheckCircle2 size={12} /> },
+    PROCESSING_FAILED: { label: "Failed",         className: "bg-red-50 text-red-600 border-red-200",               icon: <AlertCircle size={12} /> },
+    PENDING_REVIEW:    { label: "Pending Review", className: "bg-purple-50 text-purple-700 border-purple-200",      icon: <Eye size={12} /> },
+    APPROVED:          { label: "Approved",       className: "bg-green-50 text-green-700 border-green-200",         icon: <CheckCircle2 size={12} /> },
+    REJECTED:          { label: "Rejected",       className: "bg-slate-100 text-slate-500 border-slate-200",        icon: <AlertCircle size={12} /> },
+};
+
+const STATUS_FILTER_OPTIONS: Array<"All" | InvoiceStatus> = [
+    "All", "UPLOADED", "PROCESSING", "PROCESSED", "PROCESSING_FAILED", "PENDING_REVIEW", "APPROVED", "REJECTED",
 ];
 
-const statusStyles: Record<string, string> = {
-  Approved: "bg-green-500/10 text-green-400 border-green-500/20",
-  Pending: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
-  Duplicate: "bg-rose-500/10 text-rose-400 border-rose-500/20",
-  Rejected: "bg-slate-500/10 text-slate-400 border-slate-500/20",
+const STATUS_LABELS: Record<"All" | InvoiceStatus, string> = {
+    All: "All statuses",
+    UPLOADED: "Uploaded", PROCESSING: "Processing", PROCESSED: "Processed",
+    PROCESSING_FAILED: "Failed", PENDING_REVIEW: "Pending Review",
+    APPROVED: "Approved", REJECTED: "Rejected",
 };
 
-const statusIcons: Record<string, React.ReactNode> = {
-  Approved: <CheckCircle2 size={13} />,
-  Pending: <Clock size={13} />,
-  Duplicate: <AlertCircle size={13} />,
-  Rejected: <AlertCircle size={13} />,
-};
+// ── delete confirm modal ──────────────────────────────────────────────────────
+
+function DeleteConfirmModal({
+    invoice,
+    isDeleting,
+    onConfirm,
+    onCancel,
+}: {
+    invoice: Invoice | null;
+    isDeleting: boolean;
+    onConfirm: () => void;
+    onCancel: () => void;
+}) {
+    const overlayRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (!invoice) return;
+        const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onCancel(); };
+        window.addEventListener("keydown", handler);
+        return () => window.removeEventListener("keydown", handler);
+    }, [invoice, onCancel]);
+
+    return (
+        <AnimatePresence>
+            {invoice && (
+                <motion.div
+                    ref={overlayRef}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.15 }}
+                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm"
+                    onClick={(e) => { if (e.target === overlayRef.current) onCancel(); }}
+                >
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.96, y: 8 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.96, y: 8 }}
+                        transition={{ duration: 0.18, ease: "easeOut" }}
+                        className="bg-white border border-slate-200 rounded-2xl p-6 w-full max-w-sm shadow-xl"
+                    >
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="w-10 h-10 rounded-full bg-red-50 border border-red-200 flex items-center justify-center shrink-0">
+                                <AlertTriangle size={18} className="text-red-600" />
+                            </div>
+                            <div>
+                                <p className="text-slate-900 font-semibold text-sm">Delete Invoice</p>
+                                <p className="text-xs text-slate-500 mt-0.5">This action cannot be undone.</p>
+                            </div>
+                        </div>
+
+                        <p className="text-sm text-slate-600 mb-6 leading-relaxed">
+                            Are you sure you want to permanently delete{" "}
+                            <span className="text-slate-900 font-medium break-all">{invoice.original_filename}</span>?
+                            The file and all extracted data will be removed.
+                        </p>
+
+                        <div className="flex gap-3">
+                            <button
+                                onClick={onCancel}
+                                disabled={isDeleting}
+                                className="flex-1 py-2.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50 text-sm text-slate-700 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={onConfirm}
+                                disabled={isDeleting}
+                                className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg bg-red-600 hover:bg-red-500 disabled:opacity-50 text-sm text-white font-semibold transition-colors"
+                            >
+                                {isDeleting
+                                    ? <><Loader2 size={14} className="animate-spin" /> Deleting…</>
+                                    : <><Trash2 size={14} /> Delete</>}
+                            </button>
+                        </div>
+                    </motion.div>
+                </motion.div>
+            )}
+        </AnimatePresence>
+    );
+}
+
+// ── component ─────────────────────────────────────────────────────────────────
 
 export default function InvoicesPage() {
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("All");
+    return (
+        <Suspense>
+            <InvoicesPageInner />
+        </Suspense>
+    );
+}
 
-  const filtered = ALL_INVOICES.filter((inv) => {
-    const matchSearch = inv.vendor.toLowerCase().includes(search.toLowerCase()) || inv.id.toLowerCase().includes(search.toLowerCase());
-    const matchStatus = statusFilter === "All" || inv.status === statusFilter;
-    return matchSearch && matchStatus;
-  });
+function InvoicesPageInner() {
+    const { data: session } = useSession();
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const [invoices, setInvoices] = useState<Invoice[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
+    const [search, setSearch] = useState("");
+    const [statusFilter, setStatusFilter] = useState<string>(() => {
+        const s = searchParams.get("status");
+        return (s && STATUS_FILTER_OPTIONS.includes(s as "All")) ? s : "All";
+    });
+    const [processingIds, setProcessingIds] = useState<Set<number>>(new Set());
+    const [deleteTarget, setDeleteTarget] = useState<Invoice | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [showDuplicatesOnly, setShowDuplicatesOnly] = useState<boolean>(() => searchParams.get("duplicates") === "true");
 
-  return (
-    <div className="min-h-screen bg-background flex">
-      <Sidebar />
+    const invoicesRef = useRef<Invoice[]>([]);
+    invoicesRef.current = invoices;
 
-      <main className="flex-1 flex flex-col overflow-hidden">
-        <AppHeader title="Invoices" />
+    useInvoiceSocket((updated) => {
+        const prev = invoicesRef.current.find((inv) => inv.id === updated.id);
 
-        <div className="flex-1 overflow-auto p-4 md:p-6 lg:p-8">
-          <div className="bg-slate-900/50 border border-slate-800 rounded-xl flex flex-col">
+        if (!prev) {
+            toast.info(`New invoice detected from email: "${updated.original_filename}"`, {
+                description: "It's been queued for AI extraction.",
+            });
+            setInvoices((list) => [updated, ...list]);
+            return;
+        }
 
-            {/* Controls */}
-            <div className="p-4 border-b border-slate-800 flex flex-col sm:flex-row gap-3 justify-between items-center">
-              <div className="flex gap-3 w-full sm:w-auto">
-                {/* Search */}
-                <div className="relative flex-1 sm:w-64">
-                  <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-                  <input
-                    type="text"
-                    placeholder="Search vendor or ID..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-                  />
-                </div>
-                {/* Status Filter */}
-                <div className="relative">
-                  <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    className="appearance-none pl-3 pr-8 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:ring-1 focus:ring-primary-500 cursor-pointer"
-                  >
-                    {["All", "Pending", "Approved", "Rejected", "Duplicate"].map((s) => (
-                      <option key={s} value={s}>{s}</option>
-                    ))}
-                  </select>
-                  <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
-                </div>
-              </div>
+        if (prev.status !== updated.status) {
+            if (updated.status === "PROCESSED") {
+                toast.success(`"${updated.original_filename}" processed successfully.`);
+            } else if (updated.status === "PROCESSING_FAILED") {
+                toast.error(`"${updated.original_filename}" processing failed.`);
+            }
+        }
+        const prevDup = prev.duplicate_check;
+        const newDup  = updated.duplicate_check;
+        if (!prevDup && newDup && !newDup.dismissed) {
+            if (newDup.decision === "DUPLICATE") {
+                toast.error(`Duplicate detected: "${updated.original_filename}"`, {
+                    description: `${Math.round((newDup.best_match_score ?? 0) * 100)}% match with another invoice.`,
+                });
+            } else if (newDup.decision === "POSSIBLE_DUPLICATE") {
+                toast.warning(`Possible duplicate: "${updated.original_filename}"`, {
+                    description: `${Math.round((newDup.best_match_score ?? 0) * 100)}% similarity detected.`,
+                });
+            }
+        }
 
-              {/* Export */}
-              <button 
-                onClick={() => toast.success("Invoice data exported to CSV.")}
-                className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-sm text-slate-300 transition-colors whitespace-nowrap"
-              >
-                <Download size={15} /> Export CSV
-              </button>
-            </div>
+        setInvoices((list) =>
+            list.map((inv) => inv.id === updated.id ? updated : inv)
+        );
+    });
 
-            {/* Table */}
-            <div className="overflow-x-auto">
-              <table className="w-full text-left">
-                <thead>
-                  <tr className="text-xs uppercase tracking-wider text-slate-500 border-b border-slate-800/50">
-                    <th className="px-6 py-3 font-semibold">Vendor</th>
-                    <th className="px-6 py-3 font-semibold">Invoice ID</th>
-                    <th className="px-6 py-3 font-semibold">Date</th>
-                    <th className="px-6 py-3 font-semibold text-right">Amount</th>
-                    <th className="px-6 py-3 font-semibold">Status</th>
-                    <th className="px-6 py-3" />
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-800/50">
-                  {filtered.length === 0 ? (
-                    <tr>
-                      <td colSpan={6} className="px-6 py-16 text-center text-slate-500 text-sm">No invoices found</td>
-                    </tr>
-                  ) : filtered.map((inv, i) => (
-                    <motion.tr
-                      key={inv.id}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: i * 0.04 }}
-                      className="hover:bg-slate-800/30 transition-colors group cursor-pointer"
-                    >
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-xs font-bold text-slate-300">
-                            {inv.vendor.charAt(0)}
-                          </div>
-                          <span className="font-medium text-slate-200 text-sm">{inv.vendor}</span>
+    async function handleProcess(invoice: Invoice) {
+        if (!session?.accessToken) return;
+        setProcessingIds((prev) => new Set(prev).add(invoice.id));
+        try {
+            const res = await fetch(`${BACKEND_URL}/api/invoices/${invoice.id}/process/`, {
+                method: "POST",
+                headers: { Authorization: `Bearer ${session.accessToken}` },
+            });
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                toast.error((err as { detail?: string }).detail ?? "Could not start processing.");
+                return;
+            }
+            setInvoices((prev) =>
+                prev.map((inv) => inv.id === invoice.id ? { ...inv, status: "PROCESSING" } : inv)
+            );
+            toast.success(`"${invoice.original_filename}" sent for AI extraction.`);
+        } catch {
+            toast.error("Network error. Please try again.");
+        } finally {
+            setProcessingIds((prev) => { const s = new Set(prev); s.delete(invoice.id); return s; });
+        }
+    }
+
+    async function confirmDelete() {
+        if (!session?.accessToken || !deleteTarget) return;
+        setIsDeleting(true);
+        try {
+            const res = await fetch(`${BACKEND_URL}/api/invoices/${deleteTarget.id}/`, {
+                method: "DELETE",
+                headers: { Authorization: `Bearer ${session.accessToken}` },
+            });
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                toast.error((err as { detail?: string }).detail ?? "Could not delete invoice.");
+                return;
+            }
+            const name = deleteTarget.original_filename;
+            setInvoices((prev) => prev.filter((inv) => inv.id !== deleteTarget.id));
+            setDeleteTarget(null);
+            toast.success(`"${name}" deleted.`);
+        } catch {
+            toast.error("Network error. Please try again.");
+        } finally {
+            setIsDeleting(false);
+        }
+    }
+
+    useEffect(() => {
+        if (!session?.accessToken) return;
+        setLoading(true);
+        fetch(`${BACKEND_URL}/api/invoices/`, {
+            headers: { Authorization: `Bearer ${session.accessToken}` },
+        })
+            .then((res) => {
+                if (!res.ok) throw new Error(`Server error ${res.status}`);
+                return res.json() as Promise<Invoice[]>;
+            })
+            .then(setInvoices)
+            .catch(() => setError("Could not load invoices. Please refresh the page."))
+            .finally(() => setLoading(false));
+    }, [session?.accessToken]);
+
+    const filtered = invoices.filter((inv) => {
+        const vendor = extractField(inv.extracted_data, "supplier_name", "vendor_name", "seller_name");
+        const matchSearch =
+            inv.original_filename.toLowerCase().includes(search.toLowerCase()) ||
+            vendor.toLowerCase().includes(search.toLowerCase());
+        const matchStatus = statusFilter === "All" || inv.status === statusFilter;
+        const matchDuplicate = !showDuplicatesOnly || (
+            inv.duplicate_check !== null &&
+            inv.duplicate_check.decision !== "UNIQUE" &&
+            !inv.duplicate_check.dismissed
+        );
+        return matchSearch && matchStatus && matchDuplicate;
+    });
+
+    const duplicateCount = invoices.filter(
+        (inv) => inv.duplicate_check && inv.duplicate_check.decision !== "UNIQUE" && !inv.duplicate_check.dismissed
+    ).length;
+
+    return (
+        <>
+            <DeleteConfirmModal
+                invoice={deleteTarget}
+                isDeleting={isDeleting}
+                onConfirm={confirmDelete}
+                onCancel={() => !isDeleting && setDeleteTarget(null)}
+            />
+
+            <div className="min-h-screen bg-slate-50 flex">
+                <Sidebar />
+
+                <main className="flex-1 flex flex-col overflow-hidden">
+                    <AppHeader title="Invoices" />
+
+                    <div className="flex-1 overflow-auto p-4 md:p-6">
+                        <div className="bg-white border border-slate-200 rounded-xl flex flex-col overflow-hidden">
+
+                            {/* Controls */}
+                            <div className="px-4 py-3 border-b border-slate-200 flex flex-col sm:flex-row gap-2 justify-between items-center">
+                                <div className="flex gap-2 w-full sm:w-auto">
+                                    <div className="relative flex-1 sm:w-60">
+                                        <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                                        <input
+                                            type="text"
+                                            placeholder="Search filename or vendor…"
+                                            value={search}
+                                            onChange={(e) => setSearch(e.target.value)}
+                                            className="w-full pl-8 pr-3 py-1.5 bg-white border border-slate-200 rounded-lg text-[13px] text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-400"
+                                        />
+                                    </div>
+                                    <div className="relative">
+                                        <select
+                                            value={statusFilter}
+                                            onChange={(e) => setStatusFilter(e.target.value)}
+                                            className="appearance-none pl-3 pr-7 py-1.5 bg-white border border-slate-200 rounded-lg text-[13px] text-slate-700 focus:outline-none focus:ring-1 focus:ring-primary-500 cursor-pointer"
+                                        >
+                                            {STATUS_FILTER_OPTIONS.map((s) => (
+                                                <option key={s} value={s}>{STATUS_LABELS[s]}</option>
+                                            ))}
+                                        </select>
+                                        <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={() => setShowDuplicatesOnly((v) => !v)}
+                                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[12px] font-medium transition-colors whitespace-nowrap ${
+                                            showDuplicatesOnly
+                                                ? "bg-red-50 border-red-200 text-red-600"
+                                                : "bg-white border-slate-200 text-slate-500 hover:text-slate-700 hover:border-slate-300"
+                                        }`}
+                                    >
+                                        <AlertTriangle size={12} />
+                                        Duplicates
+                                        {duplicateCount > 0 && (
+                                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-100 text-red-600">
+                                                {duplicateCount}
+                                            </span>
+                                        )}
+                                    </button>
+
+                                    <Link
+                                        href="/upload"
+                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 rounded-lg text-[12px] text-white font-medium transition-colors whitespace-nowrap"
+                                    >
+                                        <UploadCloud size={13} /> Upload
+                                    </Link>
+                                </div>
+                            </div>
+
+                            {/* Table */}
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left">
+                                    <thead>
+                                        <tr className="border-b border-slate-200">
+                                            <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400">Vendor / File</th>
+                                            <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400">Invoice #</th>
+                                            <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400">Date</th>
+                                            <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400 text-right">Amount</th>
+                                            <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400">Status</th>
+                                            <th className="px-5 py-3" />
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {loading ? (
+                                            <tr>
+                                                <td colSpan={6} className="px-5 py-16 text-center">
+                                                    <Loader2 size={18} className="animate-spin text-slate-400 mx-auto" />
+                                                </td>
+                                            </tr>
+                                        ) : error ? (
+                                            <tr>
+                                                <td colSpan={6} className="px-5 py-16 text-center text-red-600 text-sm">{error}</td>
+                                            </tr>
+                                        ) : filtered.length === 0 ? (
+                                            <tr>
+                                                <td colSpan={6} className="px-5 py-16 text-center">
+                                                    <FileText size={28} className="text-slate-400 mx-auto mb-3" />
+                                                    <p className="text-slate-400 text-[13px]">
+                                                        {invoices.length === 0
+                                                            ? "No invoices yet. Upload one to get started."
+                                                            : "No invoices match your filters."}
+                                                    </p>
+                                                </td>
+                                            </tr>
+                                        ) : (
+                                            <AnimatePresence initial={false}>
+                                                {filtered.map((inv, i) => {
+                                                    const vendor = extractField(inv.extracted_data, "supplier_name", "vendor_name", "seller_name");
+                                                    const invoiceNum = extractField(inv.extracted_data, "invoice_number", "invoice_id", "reference_number");
+                                                    const amount = extractField(inv.extracted_data, "total_amount", "total_net", "amount_due", "grand_total");
+                                                    const invDate = extractField(inv.extracted_data, "date", "invoice_date", "issue_date");
+                                                    const cfg = STATUS_CONFIG[inv.status] ?? STATUS_CONFIG["UPLOADED"];
+                                                    const dup = inv.duplicate_check;
+                                                    const isDup = (dup?.decision === "DUPLICATE" || dup?.decision === "POSSIBLE_DUPLICATE") && !dup?.dismissed;
+
+                                                    return (
+                                                        <motion.tr
+                                                            key={inv.id}
+                                                            layout
+                                                            initial={{ opacity: 0 }}
+                                                            animate={{ opacity: 1 }}
+                                                            exit={{ opacity: 0, transition: { duration: 0.15 } }}
+                                                            transition={{ delay: i * 0.02, duration: 0.18 }}
+                                                            onClick={() => router.push(`/invoices/${inv.id}`)}
+                                                            className="border-b border-slate-100 hover:bg-slate-50 transition-colors group cursor-pointer"
+                                                        >
+                                                            <td className="px-5 py-3.5 whitespace-nowrap">
+                                                                <div className="flex items-center gap-3">
+                                                                    <div className="w-8 h-8 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-[11px] font-bold text-slate-500 shrink-0">
+                                                                        {vendor !== "—" ? vendor.charAt(0).toUpperCase() : <FileText size={13} className="text-slate-400" />}
+                                                                    </div>
+                                                                    <div className="min-w-0">
+                                                                        <div className="flex items-center gap-2">
+                                                                            <p className="font-medium text-slate-900 text-[13px] truncate max-w-[200px]">
+                                                                                {vendor !== "—" ? vendor : inv.original_filename}
+                                                                            </p>
+                                                                            {isDup && (
+                                                                                <span
+                                                                                    title={`${dup.decision === "DUPLICATE" ? "Duplicate" : "Possible Duplicate"} (${Math.round((dup.best_match_score || 0) * 100)}% match)`}
+                                                                                    className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-bold border ${
+                                                                                        dup.decision === "DUPLICATE"
+                                                                                        ? "bg-red-50 text-red-600 border-red-200"
+                                                                                        : "bg-amber-50 text-amber-600 border-amber-200"
+                                                                                    }`}
+                                                                                >
+                                                                                    <AlertTriangle size={8} /> DUP
+                                                                                </span>
+                                                                            )}
+                                                                        </div>
+                                                                        {vendor !== "—" && (
+                                                                            <p className="text-[11px] text-slate-400 truncate max-w-[200px] mt-0.5">{inv.original_filename}</p>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                            <td className="px-5 py-3.5 whitespace-nowrap font-mono text-[12px] text-slate-400">{invoiceNum}</td>
+                                                            <td className="px-5 py-3.5 whitespace-nowrap text-[12px] text-slate-400">
+                                                                {invDate !== "—" ? invDate : formatDate(inv.created_at)}
+                                                            </td>
+                                                            <td className="px-5 py-3.5 whitespace-nowrap text-[13px] font-mono font-semibold text-slate-900 text-right">{amount}</td>
+                                                            <td className="px-5 py-3.5 whitespace-nowrap">
+                                                                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium border ${cfg.className}`}>
+                                                                    {cfg.icon} {cfg.label}
+                                                                </span>
+                                                            </td>
+                                                            <td className="px-5 py-3.5 whitespace-nowrap text-right">
+                                                                <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                    {(inv.status === "UPLOADED" || inv.status === "PROCESSING_FAILED") && (
+                                                                        <button
+                                                                            onClick={(e) => { e.stopPropagation(); handleProcess(inv); }}
+                                                                            disabled={processingIds.has(inv.id)}
+                                                                            className="inline-flex items-center gap-1 text-[11px] text-primary-600 hover:text-primary-700 disabled:opacity-50 transition-colors"
+                                                                        >
+                                                                            {processingIds.has(inv.id)
+                                                                                ? <Loader2 size={10} className="animate-spin" />
+                                                                                : <Play size={10} />}
+                                                                            Process
+                                                                        </button>
+                                                                    )}
+                                                                    <button
+                                                                        onClick={(e) => { e.stopPropagation(); setDeleteTarget(inv); }}
+                                                                        className="inline-flex items-center gap-1 text-[11px] text-slate-400 hover:text-red-600 transition-colors"
+                                                                    >
+                                                                        <Trash2 size={10} /> Delete
+                                                                    </button>
+                                                                    <span className="text-[11px] text-slate-400 group-hover:text-slate-600 transition-colors">
+                                                                        Open →
+                                                                    </span>
+                                                                </div>
+                                                            </td>
+                                                        </motion.tr>
+                                                    );
+                                                })}
+                                            </AnimatePresence>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            {/* Footer */}
+                            {!loading && !error && (
+                                <div className="px-5 py-3 border-t border-slate-100 flex items-center justify-between">
+                                    <span className="text-[12px] text-slate-400">
+                                        <span className="text-slate-700 font-medium">{filtered.length}</span> of{" "}
+                                        <span className="text-slate-700 font-medium">{invoices.length}</span> invoices
+                                    </span>
+                                </div>
+                            )}
                         </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap font-mono text-xs text-slate-400">{inv.id}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-xs text-slate-400">{inv.date}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-slate-200 text-right">{inv.amount}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${statusStyles[inv.status]}`}>
-                          {statusIcons[inv.status]} {inv.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <Link href={`/invoices/${inv.id}`} className="text-xs text-primary-400 hover:text-primary-300 opacity-0 group-hover:opacity-100 transition-opacity">
-                          Review →
-                        </Link>
-                      </td>
-                    </motion.tr>
-                  ))}
-                </tbody>
-              </table>
+                    </div>
+                </main>
             </div>
-
-            {/* Footer */}
-            <div className="p-4 border-t border-slate-800 flex items-center justify-between text-xs text-slate-500">
-              <span>Showing <span className="text-slate-300 font-medium">{filtered.length}</span> of <span className="text-slate-300 font-medium">{ALL_INVOICES.length}</span> invoices</span>
-            </div>
-          </div>
-        </div>
-      </main>
-    </div>
-  );
+        </>
+    );
 }

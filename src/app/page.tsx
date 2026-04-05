@@ -27,13 +27,10 @@ export default function LandingPage() {
     },
   };
 
-  const item = {
-    hidden: { y: 20, opacity: 0 },
-    show: { y: 0, opacity: 1, transition: { type: "spring", stiffness: 300, damping: 24 } },
-  };
+
 
   return (
-    <div className="relative min-h-screen bg-background overflow-hidden text-slate-300">
+    <div className="relative min-h-screen bg-white overflow-hidden text-slate-700">
       {/* Background Gradients */}
       <div
         className="absolute top-0 left-0 w-full h-[800px] pointer-events-none opacity-40 mix-blend-screen"
@@ -56,32 +53,32 @@ export default function LandingPage() {
           >
 
 
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-heading font-bold text-white tracking-tight mb-6 leading-[1.1]">
-              Automate Invoice <br /> Processing with <span className="text-primary-400">AI</span>
+            <h1 className="text-5xl md:text-6xl lg:text-7xl font-heading font-bold text-slate-900 tracking-tight mb-6 leading-[1.1]">
+              Automate Invoice <br /> Processing with <span className="text-primary-600">AI</span>
             </h1>
 
-            <p className="text-xl text-slate-400 mb-8 max-w-lg leading-relaxed">
+            <p className="text-xl text-slate-500 mb-8 max-w-lg leading-relaxed">
               Extract, validate, and organize invoice data in seconds — no manual entry required. Scale your finance team efficiently.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center gap-4">
               <Link
                 href="/demo"
-                className="w-full sm:w-auto px-8 py-4 bg-primary-600 hover:bg-primary-500 text-white rounded-full font-medium transition-all transform hover:-translate-y-1 hover:shadow-[0_10px_30px_rgba(37,99,235,0.4)] flex items-center justify-center gap-2"
+                className="w-full sm:w-auto px-8 py-4 bg-slate-900 hover:bg-slate-800 text-white rounded-full font-semibold transition-all flex items-center justify-center gap-2"
               >
                 Try Demo <ArrowRight size={18} />
               </Link>
               <Link
                 href="/register"
-                className="w-full sm:w-auto px-8 py-4 bg-white/5 hover:bg-white/10 text-white rounded-full font-medium transition-all flex items-center justify-center gap-2 border border-white/10"
+                className="w-full sm:w-auto px-8 py-4 bg-white hover:bg-slate-50 text-slate-900 rounded-full font-semibold transition-all flex items-center justify-center gap-2 border border-slate-200"
               >
                 Sign Up
               </Link>
             </div>
 
             <div className="mt-8 flex items-center gap-4 text-sm text-slate-500">
-              <span className="flex items-center gap-1"><CheckCircle2 size={16} className="text-primary-500" /> No credit card required</span>
-              <span className="flex items-center gap-1"><CheckCircle2 size={16} className="text-primary-500" /> Free robust trial</span>
+              <span className="flex items-center gap-1"><CheckCircle2 size={16} className="text-primary-600" /> No credit card required</span>
+              <span className="flex items-center gap-1"><CheckCircle2 size={16} className="text-primary-600" /> Free robust trial</span>
             </div>
           </motion.div>
 
@@ -148,7 +145,7 @@ export default function LandingPage() {
             >
               <div className="w-10 h-10 rounded-full bg-rose-500/20 text-rose-500 flex items-center justify-center"><AlertCircle size={20} /></div>
               <div>
-                <p className="text-sm font-semibold text-white">Duplicate Detected</p>
+                <p className="text-sm font-semibold text-slate-900">Duplicate Detected</p>
                 <p className="text-xs text-slate-400">Match found: INV-9932</p>
               </div>
             </motion.div>
@@ -162,26 +159,26 @@ export default function LandingPage() {
             whileInView="show"
             viewport={{ once: true }}
             variants={container}
-            className="p-10 rounded-3xl border border-rose-500/20 bg-rose-500/5 relative overflow-hidden"
+            className="p-10 rounded-3xl border border-red-100 bg-red-50 relative overflow-hidden"
           >
-            <h2 className="text-3xl font-heading font-bold text-white mb-4">
+            <h2 className="text-3xl font-heading font-bold text-slate-900 mb-4">
               Manual invoice processing is slow, repetitive, and error-prone.
             </h2>
             <div className="grid md:grid-cols-3 gap-6 mt-10 relative z-10 text-left">
               <div className="space-y-3">
-                <div className="text-rose-400 mb-2"><FileText size={24} /></div>
-                <h4 className="font-semibold text-white">Copying Data</h4>
-                <p className="text-sm text-slate-400">Endless copy-pasting into spreadsheets leads to typos and burnout.</p>
+                <div className="text-red-500 mb-2"><FileText size={24} /></div>
+                <h4 className="font-semibold text-slate-900">Copying Data</h4>
+                <p className="text-sm text-slate-500">Endless copy-pasting into spreadsheets leads to typos and burnout.</p>
               </div>
               <div className="space-y-3">
-                <div className="text-rose-400 mb-2"><AlertCircle size={24} /></div>
-                <h4 className="font-semibold text-white">Missing Duplicates</h4>
-                <p className="text-sm text-slate-400">Paying the same invoice twice costs your company thousands of dollars.</p>
+                <div className="text-red-500 mb-2"><AlertCircle size={24} /></div>
+                <h4 className="font-semibold text-slate-900">Missing Duplicates</h4>
+                <p className="text-sm text-slate-500">Paying the same invoice twice costs your company thousands of dollars.</p>
               </div>
               <div className="space-y-3">
-                <div className="text-rose-400 mb-2"><Clock size={24} /></div>
-                <h4 className="font-semibold text-white">Wasting Hours</h4>
-                <p className="text-sm text-slate-400">Finance teams spend 60% of their time on admin work instead of strategy.</p>
+                <div className="text-red-500 mb-2"><Clock size={24} /></div>
+                <h4 className="font-semibold text-slate-900">Wasting Hours</h4>
+                <p className="text-sm text-slate-500">Finance teams spend 60% of their time on admin work instead of strategy.</p>
               </div>
             </div>
           </motion.div>
@@ -190,12 +187,12 @@ export default function LandingPage() {
         {/* 3. HOW IT WORKS */}
         <section className="text-center relative z-10">
           <div className="mb-16">
-            <h2 className="text-3xl md:text-4xl font-heading font-bold text-white mb-4">How It Works</h2>
-            <p className="text-slate-400 max-w-2xl mx-auto text-lg">Three simple steps to put your accounts payable on autopilot.</p>
+            <h2 className="text-3xl md:text-4xl font-heading font-bold text-slate-900 mb-4">How It Works</h2>
+            <p className="text-slate-500 max-w-2xl mx-auto text-lg">Three simple steps to put your accounts payable on autopilot.</p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto relative">
-            <div className="hidden md:block absolute top-[28%] left-[20%] right-[20%] h-px bg-gradient-to-r from-transparent via-slate-700 to-transparent"></div>
+            <div className="hidden md:block absolute top-[28%] left-[20%] right-[20%] h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent"></div>
 
             {[
               { step: "01", title: "Capture Invoices Automatically — or Upload Them", desc: "Connect your inbox or upload PDFs. Ledgix detects, extracts, and organizes everything for you.", icon: UploadCloud },
@@ -208,17 +205,17 @@ export default function LandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.2, duration: 0.5 }}
-                className="relative h-full bg-slate-900/50 border border-slate-800 p-6 md:p-8 rounded-2xl flex flex-col items-center backdrop-blur-sm"
+                className="relative h-full bg-white border border-slate-200 p-6 md:p-8 rounded-2xl flex flex-col items-center shadow-sm"
               >
-                <div className="w-16 h-16 rounded-full bg-background border border-slate-700 flex items-center justify-center mb-6 font-mono font-bold text-xl text-slate-500 z-10 shadow-lg shrink-0">
+                <div className="w-16 h-16 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center mb-6 font-mono font-bold text-xl text-slate-400 z-10 shadow-sm shrink-0">
                   {item.step}
                 </div>
-                <item.icon size={32} className="mb-5 shrink-0 text-primary-400" />
+                <item.icon size={32} className="mb-5 shrink-0 text-primary-600" />
                 <div className="flex-1 flex flex-col w-full">
                   <div className="h-20 lg:h-24 flex items-center justify-center mb-3">
-                    <h3 className="text-lg lg:text-xl font-bold text-white text-balance leading-tight">{item.title}</h3>
+                    <h3 className="text-lg lg:text-xl font-bold text-slate-900 text-balance leading-tight">{item.title}</h3>
                   </div>
-                  <p className="text-slate-400 text-sm leading-relaxed">{item.desc}</p>
+                  <p className="text-slate-500 text-sm leading-relaxed">{item.desc}</p>
                 </div>
               </motion.div>
             ))}
@@ -228,30 +225,30 @@ export default function LandingPage() {
         {/* 4. FEATURES */}
         <section className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-heading font-bold text-white mb-4">Key Features</h2>
-            <p className="text-slate-400 max-w-2xl mx-auto text-lg">Everything you need, nothing you don't. Keep it clean and moving fast.</p>
+            <h2 className="text-3xl md:text-4xl font-heading font-bold text-slate-900 mb-4">Key Features</h2>
+            <p className="text-slate-500 max-w-2xl mx-auto text-lg">Everything you need, nothing you don&apos;t. Keep it clean and moving fast.</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="glass-panel p-6 rounded-2xl hover:bg-slate-800/80 transition-colors">
-              <div className="w-10 h-10 rounded-lg bg-primary-600/20 text-primary-400 flex items-center justify-center mb-4"><Zap size={20} /></div>
-              <h3 className="text-lg font-semibold text-white mb-2">AI Data Extraction</h3>
-              <p className="text-sm text-slate-400">Instantly pull vendors, dates, and amounts with 99% accuracy.</p>
+            <div className="bg-white border border-slate-200 p-6 rounded-2xl hover:border-slate-300 hover:shadow-sm transition-all">
+              <div className="w-10 h-10 rounded-lg bg-primary-50 text-primary-600 flex items-center justify-center mb-4"><Zap size={20} /></div>
+              <h3 className="text-lg font-semibold text-slate-900 mb-2">AI Data Extraction</h3>
+              <p className="text-sm text-slate-500">Instantly pull vendors, dates, and amounts with 99% accuracy.</p>
             </div>
-            <div className="glass-panel p-6 rounded-2xl hover:bg-slate-800/80 transition-colors">
-              <div className="w-10 h-10 rounded-lg bg-rose-500/20 text-rose-400 flex items-center justify-center mb-4"><ShieldCheck size={20} /></div>
-              <h3 className="text-lg font-semibold text-white mb-2">Duplicate Detection</h3>
-              <p className="text-sm text-slate-400">Smart matching algorithms catch identical and fuzzy duplicate invoices.</p>
+            <div className="bg-white border border-slate-200 p-6 rounded-2xl hover:border-slate-300 hover:shadow-sm transition-all">
+              <div className="w-10 h-10 rounded-lg bg-red-50 text-red-600 flex items-center justify-center mb-4"><ShieldCheck size={20} /></div>
+              <h3 className="text-lg font-semibold text-slate-900 mb-2">Duplicate Detection</h3>
+              <p className="text-sm text-slate-500">Smart matching algorithms catch identical and fuzzy duplicate invoices.</p>
             </div>
-            <div className="glass-panel p-6 rounded-2xl hover:bg-slate-800/80 transition-colors">
-              <div className="w-10 h-10 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center mb-4"><FileText size={20} /></div>
-              <h3 className="text-lg font-semibold text-white mb-2">Line Item Extraction</h3>
-              <p className="text-sm text-slate-400">Automatically map tables and detailed row data, not just the totals.</p>
+            <div className="bg-white border border-slate-200 p-6 rounded-2xl hover:border-slate-300 hover:shadow-sm transition-all">
+              <div className="w-10 h-10 rounded-lg bg-green-50 text-green-600 flex items-center justify-center mb-4"><FileText size={20} /></div>
+              <h3 className="text-lg font-semibold text-slate-900 mb-2">Line Item Extraction</h3>
+              <p className="text-sm text-slate-500">Automatically map tables and detailed row data, not just the totals.</p>
             </div>
-            <div className="glass-panel p-6 rounded-2xl hover:bg-slate-800/80 transition-colors">
-              <div className="w-10 h-10 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center mb-4"><UploadCloud size={20} /></div>
-              <h3 className="text-lg font-semibold text-white mb-2">Detect Invoices in Email</h3>
-              <p className="text-sm text-slate-400">Forward invoices and let Ledgix automatically extract and organize the data.</p>
+            <div className="bg-white border border-slate-200 p-6 rounded-2xl hover:border-slate-300 hover:shadow-sm transition-all">
+              <div className="w-10 h-10 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center mb-4"><UploadCloud size={20} /></div>
+              <h3 className="text-lg font-semibold text-slate-900 mb-2">Detect Invoices in Email</h3>
+              <p className="text-sm text-slate-500">Forward invoices and let Ledgix automatically extract and organize the data.</p>
             </div>
           </div>
         </section>
@@ -259,16 +256,16 @@ export default function LandingPage() {
         {/* 5. WHY THIS IS DIFFERENT */}
         <section className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-heading font-bold text-white mb-4">
-              Not just OCR. A <span className="text-primary-400">complete system.</span>
+            <h2 className="text-3xl md:text-4xl font-heading font-bold text-slate-900 mb-4">
+              Not just OCR. A <span className="text-primary-600">complete system.</span>
             </h2>
           </div>
 
-          <div className="rounded-2xl border border-slate-700 bg-slate-900/50 overflow-hidden shadow-2xl">
-            <div className="grid grid-cols-3 bg-slate-800/50 p-6 border-b border-slate-700">
+          <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm">
+            <div className="grid grid-cols-3 bg-slate-50 p-6 border-b border-slate-200">
               <div className="col-span-1"></div>
               <div className="col-span-1 text-center font-semibold text-slate-400 text-lg">Traditional Tools</div>
-              <div className="col-span-1 text-center font-bold text-primary-400 text-xl">Ledgix</div>
+              <div className="col-span-1 text-center font-bold text-slate-900 text-xl">Ledgix</div>
             </div>
 
             {[
@@ -277,11 +274,11 @@ export default function LandingPage() {
               { feature: "Line Items", old: "Basic OCR text", new: "Structured JSON table data", highlight: true },
               { feature: "Workflow", old: "Chaotic emails", new: "End-to-end processing app", highlight: false },
             ].map((row, i) => (
-              <div key={i} className={`grid grid-cols-3 p-6 border-b border-slate-700/50 ${row.highlight ? 'bg-white/[0.02]' : ''}`}>
-                <div className="col-span-1 font-medium text-white flex items-center">{row.feature}</div>
-                <div className="col-span-1 text-center flex items-center justify-center text-slate-500">{row.old}</div>
-                <div className="col-span-1 text-center flex items-center justify-center text-white font-medium gap-2">
-                  <CheckCircle2 size={16} className="text-primary-500" />
+              <div key={i} className={`grid grid-cols-3 p-6 border-b border-slate-100 ${row.highlight ? 'bg-slate-50/50' : ''}`}>
+                <div className="col-span-1 font-medium text-slate-900 flex items-center">{row.feature}</div>
+                <div className="col-span-1 text-center flex items-center justify-center text-slate-400">{row.old}</div>
+                <div className="col-span-1 text-center flex items-center justify-center text-slate-900 font-medium gap-2">
+                  <CheckCircle2 size={16} className="text-primary-600" />
                   {row.new}
                 </div>
               </div>
@@ -290,10 +287,10 @@ export default function LandingPage() {
         </section>
 
         {/* 6. PRODUCT PREVIEW (WOW SECTION WOW) */}
-        <section className="relative -mx-4 px-4 sm:mx-0 py-20 bg-gradient-to-b from-transparent via-primary-900/10 to-transparent">
+        <section className="relative -mx-4 px-4 sm:mx-0 py-20">
           <div className="max-w-6xl mx-auto text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-heading font-bold text-white mb-4">From Invoice to Structured Data</h2>
-            <p className="text-slate-400 max-w-2xl mx-auto text-lg">Automate Invoice Processing in Seconds.</p>
+            <h2 className="text-3xl md:text-4xl font-heading font-bold text-slate-900 mb-4">From Invoice to Structured Data</h2>
+            <p className="text-slate-500 max-w-2xl mx-auto text-lg">Automate Invoice Processing in Seconds.</p>
           </div>
 
           <motion.div
@@ -311,8 +308,8 @@ export default function LandingPage() {
                   onClick={() => setDemoStep(idx)}
                   className={`px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 flex items-center gap-2 ${
                     demoStep === idx 
-                      ? 'bg-primary-600 text-white shadow-[0_0_20px_rgba(63,191,155,0.3)]' 
-                      : 'bg-slate-800/50 text-slate-400 hover:bg-slate-800 hover:text-white border border-slate-700/50'
+                      ? 'bg-slate-900 text-white'
+                      : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                   }`}
                 >
                   {text}
@@ -320,7 +317,7 @@ export default function LandingPage() {
               ))}
             </div>
 
-            <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-primary-600/50 to-purple-600/50 opacity-20 blur group-hover:opacity-40 transition duration-1000 top-16"></div>
+            <div className="absolute -inset-1 rounded-2xl bg-slate-200/50 opacity-60 blur top-16"></div>
             
             <div 
               className="relative rounded-xl border border-slate-700 bg-background overflow-hidden md:h-[550px] flex flex-col shadow-2xl transition-all duration-500"
@@ -496,38 +493,35 @@ export default function LandingPage() {
         </section>
 
         {/* 7. USE CASES */}
-        <section className="py-16 md:py-24 border-t border-b border-slate-800/50 my-20 bg-slate-900/20 relative">
+        <section className="py-16 md:py-24 border-t border-b border-slate-100 my-20 relative">
           <div className="max-w-4xl mx-auto text-center mb-16 px-4">
-            <h2 className="text-3xl md:text-4xl font-heading font-bold text-white">Built for Teams That Handle Invoices Daily</h2>
+            <h2 className="text-3xl md:text-4xl font-heading font-bold text-slate-900">Built for Teams That Handle Invoices Daily</h2>
           </div>
-          <div className="max-w-6xl mx-auto px-4 grid md:grid-cols-3 gap-8 text-center divide-y md:divide-y-0 md:divide-x divide-slate-800/70">
+          <div className="max-w-6xl mx-auto px-4 grid md:grid-cols-3 gap-8 text-center divide-y md:divide-y-0 md:divide-x divide-slate-200">
             <div className="p-6 md:px-10">
-              <Building2 className="w-12 h-12 mx-auto text-primary-400 mb-6" />
-              <h3 className="text-white font-bold text-xl mb-3">Accounting Firms</h3>
-              <p className="text-primary-400 font-semibold mb-3">Scale without hiring</p>
-              <p className="text-slate-400 text-sm leading-relaxed">Process client invoices faster — without increasing headcount.</p>
+              <Building2 className="w-12 h-12 mx-auto text-primary-600 mb-6" />
+              <h3 className="text-slate-900 font-bold text-xl mb-3">Accounting Firms</h3>
+              <p className="text-primary-600 font-semibold mb-3">Scale without hiring</p>
+              <p className="text-slate-500 text-sm leading-relaxed">Process client invoices faster — without increasing headcount.</p>
             </div>
             <div className="p-6 md:px-10">
-              <UserCircle className="w-12 h-12 mx-auto text-primary-400 mb-6" />
-              <h3 className="text-white font-bold text-xl mb-3">Freelancers</h3>
-              <p className="text-primary-400 font-semibold mb-3">Stay organized effortlessly</p>
-              <p className="text-slate-400 text-sm leading-relaxed">Track and organize expenses automatically, no spreadsheets required.</p>
+              <UserCircle className="w-12 h-12 mx-auto text-primary-600 mb-6" />
+              <h3 className="text-slate-900 font-bold text-xl mb-3">Freelancers</h3>
+              <p className="text-primary-600 font-semibold mb-3">Stay organized effortlessly</p>
+              <p className="text-slate-500 text-sm leading-relaxed">Track and organize expenses automatically, no spreadsheets required.</p>
             </div>
             <div className="p-6 md:px-10">
-              <BarChart3 className="w-12 h-12 mx-auto text-primary-400 mb-6" />
-              <h3 className="text-white font-bold text-xl mb-3">Finance Teams</h3>
-              <p className="text-primary-400 font-semibold mb-3">Reduce costly errors</p>
-              <p className="text-slate-400 text-sm leading-relaxed">Automate approvals and catch duplicate invoices before they slip through.</p>
+              <BarChart3 className="w-12 h-12 mx-auto text-primary-600 mb-6" />
+              <h3 className="text-slate-900 font-bold text-xl mb-3">Finance Teams</h3>
+              <p className="text-primary-600 font-semibold mb-3">Reduce costly errors</p>
+              <p className="text-slate-500 text-sm leading-relaxed">Automate approvals and catch duplicate invoices before they slip through.</p>
             </div>
           </div>
         </section>
 
         {/* 8. DEMO & FINAL CTA */}
         <section className="max-w-5xl mx-auto px-4 pb-32">
-          <div className="bg-slate-900/40 rounded-[2.5rem] border border-slate-800 p-12 md:p-20 text-center shadow-2xl relative overflow-hidden backdrop-blur-md">
-            {/* Subtle premium background glow */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary-900/30 rounded-full blur-[120px] pointer-events-none"></div>
-
+          <div className="bg-slate-900 rounded-[2.5rem] p-12 md:p-20 text-center relative overflow-hidden">
             <div className="relative z-10">
               <h2 className="text-4xl md:text-5xl font-heading font-bold text-white mb-6 tracking-tight">
                 Ready to automate your workflow?
@@ -539,15 +533,15 @@ export default function LandingPage() {
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <Link
                   href="/register"
-                  className="w-full sm:w-auto px-8 py-4 bg-primary-600 hover:bg-primary-500 text-white rounded-full font-medium transition-all hover:-translate-y-0.5 flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(63,191,155,0.25)]"
+                  className="w-full sm:w-auto px-8 py-4 bg-white hover:bg-slate-100 text-slate-900 rounded-full font-semibold transition-all hover:-translate-y-0.5 flex items-center justify-center gap-2"
                 >
                   Get Started for Free <ArrowRight size={18} />
                 </Link>
                 <Link
                   href="/demo"
-                  className="w-full sm:w-auto px-8 py-4 bg-slate-800/80 hover:bg-slate-700 text-white rounded-full font-medium transition-all border border-slate-700 flex items-center justify-center gap-2 hover:-translate-y-0.5"
+                  className="w-full sm:w-auto px-8 py-4 bg-slate-800 hover:bg-slate-700 text-white rounded-full font-medium transition-all border border-slate-700 flex items-center justify-center gap-2 hover:-translate-y-0.5"
                 >
-                  <Zap size={18} className="text-primary-400" /> Interactive Demo
+                  <Zap size={18} className="text-slate-400" /> Interactive Demo
                 </Link>
               </div>
             </div>
