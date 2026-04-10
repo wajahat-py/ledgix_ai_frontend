@@ -1,5 +1,6 @@
 import axios from "axios";
 import { getSession } from "next-auth/react";
+import { orgStore } from "@/lib/org-store";
 import { tokenStore } from "@/lib/token-store";
 
 export const api = axios.create({
@@ -9,8 +10,12 @@ export const api = axios.create({
 // Attach the in-memory access token to every outgoing request
 api.interceptors.request.use((config) => {
     const token = tokenStore.get();
+    const orgId = orgStore.get();
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
+    }
+    if (orgId) {
+        config.headers["X-Organization-Id"] = String(orgId);
     }
     return config;
 });

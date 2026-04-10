@@ -1,7 +1,3 @@
-// Pre-import next/headers so Turbopack bundles it before next-auth's internal
-// dynamic require("next/headers") runs inside NextAuthRouteHandler.
-import "next/headers";
-
 import NextAuth, { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
@@ -9,7 +5,10 @@ import type { JWT } from "next-auth/jwt";
 
 export const dynamic = "force-dynamic";
 
-const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://127.0.0.1:8000";
+const backendUrl =
+    process.env.BACKEND_INTERNAL_URL ||
+    process.env.NEXT_PUBLIC_BACKEND_URL ||
+    "http://127.0.0.1:8000";
 
 const ACCESS_TOKEN_LIFETIME_MS = 23 * 60 * 60 * 1000; // 23 h
 const REFRESH_BUFFER_MS        = 5  * 60 * 1000;      // 5 min
@@ -37,8 +36,8 @@ async function refreshAccessToken(token: JWT): Promise<JWT> {
 export const authOptions: NextAuthOptions = {
     providers: [
         GoogleProvider({
-            clientId:     process.env.GOOGLE_CLIENT_ID!,
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+            clientId:     process.env.GOOGLE_CLIENT_ID_AUTH!,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET_AUTH!,
             authorization: {
                 params: {
                     // Request id_token so we can pass it to our backend for
@@ -160,16 +159,4 @@ export const authOptions: NextAuthOptions = {
 
 const handler = NextAuth(authOptions);
 
-export async function GET(
-    request: Request,
-    context: { params: Promise<{ nextauth: string[] }> }
-) {
-    return handler(request as any, context as any);
-}
-
-export async function POST(
-    request: Request,
-    context: { params: Promise<{ nextauth: string[] }> }
-) {
-    return handler(request as any, context as any);
-}
+export { handler as GET, handler as POST };

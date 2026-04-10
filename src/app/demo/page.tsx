@@ -585,6 +585,7 @@ export default function DemoPage() {
     setDecision(null);
     setCustomVendor("");
     setTimelineVisible(0);
+    setShowROI(false);
   }
 
   function handleProcess() {
@@ -594,6 +595,7 @@ export default function DemoPage() {
     setDupPhase("hidden");
     setDecision(null);
     setCustomVendor("");
+    setShowROI(true);
 
     // Build timeline with real current time
     const now = Date.now();
@@ -641,6 +643,7 @@ export default function DemoPage() {
     setDecision(null);
     setCustomVendor("");
     setTimelineVisible(0);
+    setShowROI(false);
   }
 
   const invoice       = INVOICES[selectedIdx];
@@ -663,12 +666,16 @@ export default function DemoPage() {
           <Info size={13} className="shrink-0" />
           Demo mode — sample data only. No account required.
         </div>
-        <Link
-          href="/register"
-          className="text-[13px] font-semibold text-white underline underline-offset-2 hover:text-slate-200 transition-colors"
-        >
-          Sign up free to process real invoices →
-        </Link>
+        <div className="text-[13px] text-slate-300">
+          Want full access?{" "}
+          <Link href="/login?demo=1" className="font-semibold text-white underline underline-offset-2 hover:text-slate-200 transition-colors">
+            Use demo account
+          </Link>{" "}
+          or{" "}
+          <Link href="/register" className="font-semibold text-white underline underline-offset-2 hover:text-slate-200 transition-colors">
+            Sign up
+          </Link>
+        </div>
       </div>
 
       <div className="flex flex-1">
@@ -734,6 +741,15 @@ export default function DemoPage() {
         {/* ── Main ── */}
         <main className="flex-1 p-4 md:p-6 lg:p-8 min-w-0">
           <div className="max-w-4xl mx-auto space-y-5">
+
+            <section className="rounded-2xl border border-primary-100 bg-gradient-to-r from-primary-50 via-white to-slate-50 px-5 py-4 md:px-6 md:py-5">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary-700">
+                Why teams switch
+              </p>
+              <h2 className="mt-2 text-xl md:text-2xl font-semibold text-slate-900">
+                Turn 6.7 hours of manual work into 10 minutes
+              </h2>
+            </section>
 
             {/* Mobile invoice picker */}
             <div className="flex md:hidden gap-2 overflow-x-auto pb-1">

@@ -31,6 +31,11 @@ export default function UploadPage() {
     const [files, setFiles] = useState<QueuedFile[]>([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [uploaded, setUploaded] = useState<Invoice[]>([]);
+    const usageNearLimit =
+        usage?.invoice_limit !== null &&
+        usage?.invoice_limit !== undefined &&
+        usage.invoice_limit > 0 &&
+        usage.invoice_count / usage.invoice_limit >= 0.8;
 
     // ── file selection ────────────────────────────────────────────────────────
 
@@ -104,7 +109,7 @@ export default function UploadPage() {
                 <Sidebar />
                 <div className="flex-1 flex flex-col min-w-0">
                     <AppHeader title="Upload Invoice" />
-                    <div className="flex-1 overflow-auto p-4 md:p-6 lg:p-8">
+                    <div className="flex-1 overflow-auto p-4 pb-24 md:p-6 md:pb-6 lg:p-8">
                         <div className="max-w-3xl mx-auto w-full space-y-6">
                             <motion.div
                                 initial={{ opacity: 0, y: 12 }}
@@ -164,7 +169,7 @@ export default function UploadPage() {
             <div className="flex-1 flex flex-col min-w-0">
                 <AppHeader title="Upload Invoice" />
 
-                <div className="flex-1 overflow-auto p-4 md:p-6 lg:p-8">
+                <div className="flex-1 overflow-auto p-4 pb-24 md:p-6 md:pb-6 lg:p-8">
                     <div className="max-w-3xl mx-auto w-full space-y-6">
 
                         <div className="flex items-start justify-between gap-4 flex-wrap">
@@ -180,12 +185,12 @@ export default function UploadPage() {
                                 <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[12px] font-medium shrink-0 ${
                                     atLimit
                                         ? "border-red-200 bg-red-50 text-red-600"
-                                        : usage.invoice_count / usage.invoice_limit >= 0.8
+                                        : usageNearLimit
                                             ? "border-amber-200 bg-amber-50 text-amber-700"
                                             : "border-slate-200 bg-white text-slate-500"
                                 }`}>
                                     {atLimit && <Lock size={10} />}
-                                    {usage.invoice_count} / {usage.invoice_limit} this month
+                                    {usage.invoice_count} / {usage.invoice_limit ?? "Unlimited"} this month
                                 </div>
                             )}
                         </div>
@@ -202,7 +207,7 @@ export default function UploadPage() {
                                 </div>
                                 <p className="text-slate-900 font-semibold text-[15px] mb-1">Monthly limit reached</p>
                                 <p className="text-[13px] text-slate-500 mb-5 max-w-xs">
-                                    You&apos;ve used all {usage?.invoice_limit} invoices for this month. Upgrade to keep uploading.
+                                    You&apos;ve used all {usage?.invoice_limit ?? "your available"} invoices for this month. Upgrade to keep uploading.
                                 </p>
                                 <a
                                     href="mailto:hello@ledgix.app"

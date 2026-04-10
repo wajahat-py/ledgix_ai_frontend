@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { motion } from "framer-motion";
-import { Mail, Lock, ArrowRight, Loader2, RefreshCw, CheckCircle2 } from "lucide-react";
+import { Mail, Lock, ArrowRight, Loader2, RefreshCw, CheckCircle2, Sparkles } from "lucide-react";
 
 interface FieldErrors {
     email?:    string;
@@ -13,6 +13,8 @@ interface FieldErrors {
 }
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000";
+const DEMO_EMAIL = process.env.NEXT_PUBLIC_DEMO_EMAIL ?? "demo@ledgix.ai";
+const DEMO_PASSWORD = process.env.NEXT_PUBLIC_DEMO_PASSWORD ?? "demo123";
 
 // ── Google logo SVG ───────────────────────────────────────────────────────────
 function GoogleLogo() {
@@ -51,6 +53,7 @@ function LoginPageInner() {
     const [resendMessage, setResendMessage] = useState("");
     // Google-only account hint
     const [showGoogleHint, setShowGoogleHint] = useState(false);
+    const [demoLoading, setDemoLoading] = useState(false);
 
     useEffect(() => {
         if (searchParams.get("reset") === "success") setResetSuccess(true);
@@ -66,6 +69,14 @@ function LoginPageInner() {
                         : "Google sign-in failed. Please try again.";
             setFieldErrors({ password: msg });
         }
+    }, [searchParams]);
+
+    useEffect(() => {
+        if (searchParams.get("demo") === "1") {
+            void handleDemoLogin();
+        }
+    // Intentionally only keyed to the query flag.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchParams]);
 
     const validate = (): FieldErrors => {
@@ -88,8 +99,11 @@ function LoginPageInner() {
         setResendMessage("");
         setIsLoading(true);
 
+        const plan = searchParams.get("plan");
+        const callbackUrl = plan === "pro" ? "/dashboard?upgrade=pro" : "/dashboard";
+
         try {
-            const res = await signIn("credentials", { redirect: false, email, password });
+            const res = await signIn("credentials", { redirect: false, email, password, callbackUrl });
 
             if (res?.error) {
                 // Re-check the backend for a specific error code
@@ -114,7 +128,7 @@ function LoginPageInner() {
                 } catch { /* ignore */ }
                 setFieldErrors({ password: "Invalid email or password." });
             } else {
-                window.location.href = "/dashboard";
+                window.location.href = callbackUrl;
             }
         } catch {
             setFieldErrors({ password: "An error occurred. Please try again." });
@@ -143,8 +157,40 @@ function LoginPageInner() {
 
     const handleGoogleSignIn = async () => {
         setGoogleLoading(true);
-        await signIn("google", { callbackUrl: "/dashboard" });
+        const plan = searchParams.get("plan");
+        const callbackUrl = plan === "pro" ? "/dashboard?upgrade=pro" : "/dashboard";
+        await signIn("google", { callbackUrl });
         // Page navigates away; loading state clears automatically.
+    };
+
+    const handleDemoLogin = async () => {
+        setFieldErrors({});
+        setShowResend(false);
+        setShowGoogleHint(false);
+        setResendMessage("");
+        setEmail(DEMO_EMAIL);
+        setPassword(DEMO_PASSWORD);
+        setDemoLoading(true);
+
+        try {
+            const res = await signIn("credentials", {
+                redirect: false,
+                email: DEMO_EMAIL,
+                password: DEMO_PASSWORD,
+                callbackUrl: "/dashboard?demo=1",
+            });
+
+            if (res?.error) {
+                setFieldErrors({ password: "Demo login failed. Please try again." });
+                return;
+            }
+
+            window.location.href = "/dashboard?demo=1";
+        } catch {
+            setFieldErrors({ password: "Demo login failed. Please try again." });
+        } finally {
+            setDemoLoading(false);
+        }
     };
 
     const inputClass = (field: keyof FieldErrors) =>
@@ -200,7 +246,7 @@ function LoginPageInner() {
                     <button
                         type="button"
                         onClick={handleGoogleSignIn}
-                        disabled={googleLoading || isLoading}
+                        disabled={googleLoading || isLoading || demoLoading}
                         className="w-full inline-flex justify-center items-center gap-3 py-2.5 px-4 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-sm font-medium text-slate-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
                     >
                         {googleLoading
@@ -246,7 +292,7 @@ function LoginPageInner() {
                                         <button
                                             type="button"
                                             onClick={handleGoogleSignIn}
-                                            disabled={googleLoading}
+                                            disabled={googleLoading || demoLoading}
                                             className="mt-2 inline-flex items-center gap-1.5 text-[12px] text-primary-600 hover:text-primary-700 transition-colors disabled:opacity-50"
                                         >
                                             <GoogleLogo />
@@ -300,7 +346,7 @@ function LoginPageInner() {
                         </div>
 
                         <button
-                            type="submit" disabled={isLoading || googleLoading}
+                            type="submit" disabled={isLoading || googleLoading || demoLoading}
                             className="w-full flex justify-center py-2.5 px-4 rounded-lg text-sm font-semibold text-white bg-slate-900 hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-primary-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed items-center gap-2"
                         >
                             {isLoading
@@ -308,6 +354,38 @@ function LoginPageInner() {
                                 : "Sign in"}
                         </button>
                     </form>
+
+                    <div className="mt-4 rounded-xl border border-primary-100 bg-primary-50/60 p-4">
+                    <div className="flex items-start gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-white border border-primary-100 flex items-center justify-center shrink-0">
+                            <Sparkles size={16} className="text-primary-600" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                            <p className="text-[13px] font-semibold text-slate-900">
+                                Try Demo Account
+                            </p>
+                            <p className="mt-1 text-[12px] text-slate-600 leading-relaxed">
+                                Explore the full dashboard instantly — no signup required.
+                            </p>
+                            <div className="mt-3 rounded-lg border border-primary-100 bg-white px-3 py-2 text-[12px] text-slate-700">
+                                <p><span className="font-medium text-slate-900">Email:</span> {DEMO_EMAIL}</p>
+                                <p><span className="font-medium text-slate-900">Password:</span> {DEMO_PASSWORD}</p>
+                            </div>
+                            <p className="text-[11px] text-slate-500 mt-2">Auto-fill & login with one tap.</p>
+                            <button
+                                type="button"
+                                onClick={handleDemoLogin}
+                                disabled={isLoading || googleLoading || demoLoading}
+                                className="mt-1 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                                {demoLoading
+                                    ? <Loader2 size={15} className="animate-spin" />
+                                    : <ArrowRight size={15} />}
+                                {demoLoading ? "Opening demo workspace..." : "Login as Demo User"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
                 </div>
 
                 <p className="mt-5 text-center text-[13px] text-slate-500">

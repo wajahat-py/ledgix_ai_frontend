@@ -22,6 +22,7 @@ function VerifyEmailInner() {
 
     const [state, setState] = useState<"loading" | "success" | "error">("loading");
     const [message, setMessage] = useState("");
+    const [verifiedPlan, setVerifiedPlan] = useState("free");
 
     useEffect(() => {
         if (!token) {
@@ -36,6 +37,7 @@ function VerifyEmailInner() {
                 if (res.ok) {
                     setState("success");
                     setMessage(data.detail);
+                    if (data.plan) setVerifiedPlan(data.plan);
                 } else {
                     setState("error");
                     setMessage(data.detail ?? "Verification failed.");
@@ -70,7 +72,7 @@ function VerifyEmailInner() {
                         <h2 className="text-xl font-semibold text-slate-900 mb-2">Email verified!</h2>
                         <p className="text-slate-500 text-sm mb-6">{message}</p>
                         <Link
-                            href="/login"
+                            href={`/login${verifiedPlan === "pro" ? "?plan=pro" : ""}`}
                             className="inline-flex items-center gap-2 px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-sm font-semibold transition-colors"
                         >
                             Sign in to your account

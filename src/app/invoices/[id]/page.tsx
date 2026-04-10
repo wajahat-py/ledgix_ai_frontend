@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { useSession } from "next-auth/react";
 import Sidebar from "@/components/Sidebar";
 import AppHeader from "@/components/AppHeader";
+import { useOrg } from "@/lib/org-context";
 import { useInvoiceSocket } from "@/hooks/useInvoiceSocket";
 import type { Invoice, InvoiceStatus } from "@/types/invoice";
 
@@ -51,13 +52,39 @@ const CONFIDENCE_STYLES: Record<string, { className: string; label: string }> = 
     UNKNOWN:   { className: "text-slate-500 bg-slate-100 border-slate-200",   label: "Unknown" },
 };
 
+function selectStyleForPercent(pct: number) {
+    if (pct >= 95) return CONFIDENCE_STYLES.CERTAIN;
+    if (pct >= 90) return CONFIDENCE_STYLES.VERY_HIGH;
+    if (pct >= 80) return CONFIDENCE_STYLES.HIGH;
+    if (pct >= 70) return CONFIDENCE_STYLES.MEDIUM;
+    if (pct >= 50) return CONFIDENCE_STYLES.LOW;
+    return CONFIDENCE_STYLES.VERY_LOW;
+}
+
+function resolveConfidence(confidence: string | number | undefined) {
+    if (confidence === undefined || confidence === null) {
+        return { style: CONFIDENCE_STYLES.UNKNOWN, text: CONFIDENCE_STYLES.UNKNOWN.label };
+    }
+    const normalized = String(confidence).trim();
+    const numeric = Number(normalized);
+    if (!Number.isNaN(numeric)) {
+        const percent = numeric > 1 ? numeric : numeric * 100;
+        const style = selectStyleForPercent(percent);
+        return {
+            style,
+            text: `${style.label} · ${Math.round(percent)}%`,
+        };
+    }
+    const key = normalized.toUpperCase().replace(/\s+/g, "_");
+    const style = CONFIDENCE_STYLES[key] ?? CONFIDENCE_STYLES.UNKNOWN;
+    return { style, text: style.label };
+}
+
 function ConfidenceBadge({ confidence }: { confidence: string | number | undefined }) {
-    if (confidence === undefined || confidence === null) return null;
-    const key = String(confidence).toUpperCase().replace(/\s+/g, "_");
-    const style = CONFIDENCE_STYLES[key] ?? CONFIDENCE_STYLES["UNKNOWN"];
+    const resolved = resolveConfidence(confidence);
     return (
-        <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium border shrink-0 ${style.className}`}>
-            {style.label}
+        <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium border shrink-0 ${resolved.style.className}`}>
+            {resolved.text}
         </span>
     );
 }
@@ -230,6 +257,29 @@ function renderNestedFieldDict(obj: Record<string, unknown>): string {
 }
 
 /**
+ * Extract the confidence for a field entry.
+ *
+ * New-format entries (produced by _serialize_raw_field) always carry a
+ * top-level "confidence" key. Old-format ObjectField entries (addresses,
+ * locale) have no top-level confidence — only their sub-fields do. We walk
+ * one level of sub-fields as a fallback so the badge never falls back to
+ * "Unknown" when the data is present.
+ */
+function getEntryConfidence(entry: FieldEntry): string | number | undefined {
+    if (entry === null || entry === undefined || typeof entry !== "object" || Array.isArray(entry)) return undefined;
+    const obj = entry as Record<string, unknown>;
+    if ("confidence" in obj) return obj.confidence as string | number;
+    // Old-format ObjectField — derive from the first sub-field that has confidence.
+    for (const v of Object.values(obj)) {
+        if (v && typeof v === "object" && !Array.isArray(v)) {
+            const sub = v as Record<string, unknown>;
+            if ("confidence" in sub) return sub.confidence as string | number;
+        }
+    }
+    return undefined;
+}
+
+/**
  * Render a scalar FieldEntry to a display string.
  * Returns "BLANK" when the value is absent or empty.
  */
@@ -375,9 +425,9 @@ function DeleteConfirmModal({
 
 // ── file preview ──────────────────────────────────────────────────────────────
 
-// Proxy PDFs through the Next.js server so the iframe is same-origin.
-// Chrome blocks cross-origin PDFs in iframes at the browser level regardless
-// of any server headers — serving from the same port (3000) is the only fix.
+// Proxy PDFs through the Next.js server so the iframe stays same-origin.
+// This avoids browser frame restrictions when the backend runs on a different
+// origin (localhost:8000) from the frontend (localhost:3000).
 function proxyUrl(fileUrl: string) {
     return `/api/media-proxy?url=${encodeURIComponent(fileUrl)}`;
 }
@@ -639,6 +689,7 @@ export default function InvoiceDetailPage() {
     const params = useParams();
     const invoiceId = params?.id as string;
     const { data: session } = useSession();
+    const { canUpload, canApprove: userCanApprove, canDeleteAny, role } = useOrg();
     const router = useRouter();
 
     const [invoice, setInvoice] = useState<Invoice | null>(null);
@@ -692,7 +743,14 @@ export default function InvoiceDetailPage() {
                 }
             }
         }
-        setInvoice(updated);
+        // Preserve file_url from existing state — the backend serializer omits
+        // it when called without an HTTP request context (e.g. from Celery),
+        // but the file never changes after upload so the current value is valid.
+        const merged: Invoice = {
+            ...updated,
+            file_url: updated.file_url ?? prev?.file_url ?? null,
+        };
+        setInvoice(merged);
     });
 
     useEffect(() => {
@@ -933,9 +991,10 @@ export default function InvoiceDetailPage() {
     }
 
     const statusCfg = invoice ? (STATUS_CONFIG[invoice.status] ?? STATUS_CONFIG["UPLOADED"]) : null;
-    const canApproveReject = invoice?.status === "PROCESSED" || invoice?.status === "PENDING_REVIEW";
-    const canFlagReview = invoice?.status === "PROCESSED";
-    const canEdit = invoice?.status === "PROCESSED" || invoice?.status === "PENDING_REVIEW";
+    const canApproveReject = userCanApprove && (invoice?.status === "PROCESSED" || invoice?.status === "PENDING_REVIEW");
+    const canFlagReview = canUpload && invoice?.status === "PROCESSED";
+    const canEdit = role !== "viewer" && (invoice?.status === "PROCESSED" || invoice?.status === "PENDING_REVIEW");
+    const canDelete = canDeleteAny || role === "member";
     const hasExtractedData = scalarFields.length > 0 || listFields.length > 0;
 
     return (
@@ -949,10 +1008,10 @@ export default function InvoiceDetailPage() {
         />
         <div className="min-h-screen bg-slate-50 flex">
             <Sidebar />
-            <main className="flex-1 flex flex-col overflow-hidden">
+            <main className="flex min-w-0 flex-1 flex-col overflow-hidden">
                 <AppHeader title="Invoice Detail" />
 
-                <div className="flex-1 overflow-auto p-4 md:p-6 lg:p-8">
+                <div className="flex-1 overflow-auto p-4 pb-24 md:p-6 md:pb-6 lg:p-8">
                     <Link href="/invoices" className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700 transition-colors mb-6">
                         <ArrowLeft size={16} /> Back to Invoices
                     </Link>
@@ -987,13 +1046,15 @@ export default function InvoiceDetailPage() {
                                                 {statusCfg.icon} {statusCfg.label}
                                             </span>
                                         )}
-                                        <button
-                                            onClick={() => setShowDeleteModal(true)}
-                                            title="Delete invoice"
-                                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-medium transition-colors"
-                                        >
-                                            <Trash2 size={13} /> Delete
-                                        </button>
+                                        {canDelete && (
+                                            <button
+                                                onClick={() => setShowDeleteModal(true)}
+                                                title="Delete invoice"
+                                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-medium transition-colors"
+                                            >
+                                                <Trash2 size={13} /> Delete
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -1014,16 +1075,18 @@ export default function InvoiceDetailPage() {
                                 <div className="bg-white border border-slate-200 rounded-xl p-5">
                                     <p className="text-slate-900 font-semibold text-sm mb-1">Not yet processed</p>
                                     <p className="text-xs text-slate-500 mb-4">
-                                        This invoice hasn&apos;t been sent for AI extraction yet. Process it when you&apos;re ready.
+                                        This invoice hasn&apos;t been sent for AI extraction yet.{canUpload ? " Process it when you're ready." : " An admin or member will process it."}
                                     </p>
-                                    <button
-                                        onClick={handleProcess}
-                                        disabled={processLoading}
-                                        className="flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white text-sm font-semibold rounded-lg transition-colors"
-                                    >
-                                        {processLoading ? <Loader2 size={15} className="animate-spin" /> : <Play size={15} />}
-                                        Process Now
-                                    </button>
+                                    {canUpload && (
+                                        <button
+                                            onClick={handleProcess}
+                                            disabled={processLoading}
+                                            className="flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white text-sm font-semibold rounded-lg transition-colors"
+                                        >
+                                            {processLoading ? <Loader2 size={15} className="animate-spin" /> : <Play size={15} />}
+                                            Process Now
+                                        </button>
+                                    )}
                                 </div>
                             )}
 
@@ -1046,14 +1109,16 @@ export default function InvoiceDetailPage() {
                                             <p className="text-xs text-red-600">{invoice.error_message || "An error occurred during AI extraction."}</p>
                                         </div>
                                     </div>
-                                    <button
-                                        onClick={handleProcess}
-                                        disabled={processLoading}
-                                        className="flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-200 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors"
-                                    >
-                                        {processLoading ? <Loader2 size={15} className="animate-spin" /> : <Play size={15} />}
-                                        Retry Processing
-                                    </button>
+                                    {canUpload && (
+                                        <button
+                                            onClick={handleProcess}
+                                            disabled={processLoading}
+                                            className="flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-200 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors"
+                                        >
+                                            {processLoading ? <Loader2 size={15} className="animate-spin" /> : <Play size={15} />}
+                                            Retry Processing
+                                        </button>
+                                    )}
                                 </div>
                             )}
 
@@ -1122,7 +1187,7 @@ export default function InvoiceDetailPage() {
 
                                                 <div className="space-y-2">
                                                     {scalarFields.map(([key, entry]) => {
-                                                        const conf = (entry as { confidence?: string | number } | null)?.confidence;
+                                                        const conf = getEntryConfidence(entry);
                                                         return (
                                                             <div key={key} className="bg-slate-50 rounded-lg px-4 py-3">
                                                                 <div className="flex items-start justify-between gap-3">

@@ -6,8 +6,10 @@ import Link from "next/link";
 import {
   ArrowRight, FileText, Zap, ShieldCheck,
   BarChart3, UploadCloud, CheckCircle2,
-  AlertCircle, Clock, Building2, UserCircle
+  AlertCircle, Clock, Building2, UserCircle,
+  Mail, Download, Users,
 } from "lucide-react";
+import { featureCategories, marketingFeatures } from "@/lib/marketing-features";
 
 export default function LandingPage() {
   const [demoStep, setDemoStep] = useState(0);
@@ -76,9 +78,17 @@ export default function LandingPage() {
               </Link>
             </div>
 
+            <p className="mt-3 text-sm text-slate-500">
+              Or explore full dashboard instantly using the{" "}
+              <Link href="/login?demo=1" className="font-medium text-slate-900 underline underline-offset-2 transition-colors hover:text-slate-700">
+                demo account
+              </Link>
+              .
+            </p>
+
             <div className="mt-8 flex items-center gap-4 text-sm text-slate-500">
               <span className="flex items-center gap-1"><CheckCircle2 size={16} className="text-primary-600" /> No credit card required</span>
-              <span className="flex items-center gap-1"><CheckCircle2 size={16} className="text-primary-600" /> Free robust trial</span>
+              <span className="flex items-center gap-1"><CheckCircle2 size={16} className="text-primary-600" /> Free to get started</span>
             </div>
           </motion.div>
 
@@ -195,9 +205,9 @@ export default function LandingPage() {
             <div className="hidden md:block absolute top-[28%] left-[20%] right-[20%] h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent"></div>
 
             {[
-              { step: "01", title: "Capture Invoices Automatically — or Upload Them", desc: "Connect your inbox or upload PDFs. Ledgix detects, extracts, and organizes everything for you.", icon: UploadCloud },
-              { step: "02", title: "AI Extracts & Validates", desc: "Instantly extract vendors, line items, and detect duplicate invoices.", icon: Zap },
-              { step: "03", title: "Review & Export", desc: "Approve the structured data with one click and export to CSV or your accounting software.", icon: CheckCircle2 }
+              { step: "01", title: "Upload or Import from Gmail", desc: "Upload PDFs directly or connect Gmail to import invoice attachments in a few clicks.", icon: UploadCloud },
+              { step: "02", title: "AI Extracts & Validates", desc: "Instantly extracts vendors, amounts, line items, and flags duplicate invoices automatically.", icon: Zap },
+              { step: "03", title: "Review, Approve & Export", desc: "Approve or reject invoices as a team, then export to CSV, Excel, QuickBooks, or Xero.", icon: CheckCircle2 }
             ].map((item, i) => (
               <motion.div
                 key={i}
@@ -229,26 +239,93 @@ export default function LandingPage() {
             <p className="text-slate-500 max-w-2xl mx-auto text-lg">Everything you need, nothing you don&apos;t. Keep it clean and moving fast.</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div className="bg-white border border-slate-200 p-6 rounded-2xl hover:border-slate-300 hover:shadow-sm transition-all">
               <div className="w-10 h-10 rounded-lg bg-primary-50 text-primary-600 flex items-center justify-center mb-4"><Zap size={20} /></div>
               <h3 className="text-lg font-semibold text-slate-900 mb-2">AI Data Extraction</h3>
-              <p className="text-sm text-slate-500">Instantly pull vendors, dates, and amounts with 99% accuracy.</p>
+              <p className="text-sm text-slate-500">Extracts vendors, dates, amounts, and line items from any PDF or image invoice.</p>
             </div>
             <div className="bg-white border border-slate-200 p-6 rounded-2xl hover:border-slate-300 hover:shadow-sm transition-all">
               <div className="w-10 h-10 rounded-lg bg-red-50 text-red-600 flex items-center justify-center mb-4"><ShieldCheck size={20} /></div>
               <h3 className="text-lg font-semibold text-slate-900 mb-2">Duplicate Detection</h3>
-              <p className="text-sm text-slate-500">Smart matching algorithms catch identical and fuzzy duplicate invoices.</p>
+              <p className="text-sm text-slate-500">Multi-signal matching catches identical and fuzzy duplicates before they get approved.</p>
+            </div>
+            <div className="bg-white border border-slate-200 p-6 rounded-2xl hover:border-slate-300 hover:shadow-sm transition-all">
+              <div className="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center mb-4"><Mail size={20} /></div>
+              <h3 className="text-lg font-semibold text-slate-900 mb-2">Gmail Import</h3>
+              <p className="text-sm text-slate-500">Connect Gmail via OAuth and import invoice attachments directly — no forwarding needed.</p>
+            </div>
+            <div className="bg-white border border-slate-200 p-6 rounded-2xl hover:border-slate-300 hover:shadow-sm transition-all">
+              <div className="w-10 h-10 rounded-lg bg-violet-50 text-violet-600 flex items-center justify-center mb-4"><Users size={20} /></div>
+              <h3 className="text-lg font-semibold text-slate-900 mb-2">Team & Approval Queue</h3>
+              <p className="text-sm text-slate-500">Invite teammates, assign roles, and manage invoice approvals through a shared queue.</p>
+            </div>
+            <div className="bg-white border border-slate-200 p-6 rounded-2xl hover:border-slate-300 hover:shadow-sm transition-all">
+              <div className="w-10 h-10 rounded-lg bg-green-50 text-green-600 flex items-center justify-center mb-4"><Download size={20} /></div>
+              <h3 className="text-lg font-semibold text-slate-900 mb-2">Export Anywhere</h3>
+              <p className="text-sm text-slate-500">Download as CSV, Excel, PDF, or import-ready files for QuickBooks and Xero.</p>
             </div>
             <div className="bg-white border border-slate-200 p-6 rounded-2xl hover:border-slate-300 hover:shadow-sm transition-all">
               <div className="w-10 h-10 rounded-lg bg-green-50 text-green-600 flex items-center justify-center mb-4"><FileText size={20} /></div>
               <h3 className="text-lg font-semibold text-slate-900 mb-2">Line Item Extraction</h3>
-              <p className="text-sm text-slate-500">Automatically map tables and detailed row data, not just the totals.</p>
+              <p className="text-sm text-slate-500">Captures full table data with quantities and unit prices — not just the invoice total.</p>
             </div>
-            <div className="bg-white border border-slate-200 p-6 rounded-2xl hover:border-slate-300 hover:shadow-sm transition-all">
-              <div className="w-10 h-10 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center mb-4"><UploadCloud size={20} /></div>
-              <h3 className="text-lg font-semibold text-slate-900 mb-2">Detect Invoices in Email</h3>
-              <p className="text-sm text-slate-500">Forward invoices and let Ledgix automatically extract and organize the data.</p>
+          </div>
+        </section>
+
+        <section className="max-w-6xl mx-auto">
+          <div className="rounded-[2rem] border border-slate-200 bg-slate-50 p-6 md:p-8 lg:p-10">
+            <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-8 mb-8">
+              <div className="max-w-2xl">
+                <p className="text-xs font-semibold uppercase tracking-widest text-primary-600 mb-3">Feature Map</p>
+                <h2 className="text-3xl md:text-4xl font-heading font-bold text-slate-900 mb-4">See the whole product, not just isolated tools</h2>
+                <p className="text-slate-500 text-base md:text-lg leading-relaxed">
+                  Strong home pages explain how a product works across the full workflow. Ledgix brings invoice capture, AI extraction, review controls, and accounting export into one system.
+                </p>
+              </div>
+              <Link
+                href="/features"
+                className="inline-flex items-center gap-2 self-start px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold rounded-xl transition-colors"
+              >
+                View all features <ArrowRight size={14} />
+              </Link>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4 mb-8">
+              {featureCategories.map((category) => (
+                <div key={category.title} className="rounded-2xl border border-slate-200 bg-white p-5">
+                  <h3 className="text-sm font-semibold text-slate-900 mb-2">{category.title}</h3>
+                  <p className="text-xs text-slate-500 leading-relaxed mb-4">{category.description}</p>
+                  <div className="space-y-2">
+                    {category.items.map((item) => (
+                      <div key={item} className="flex items-start gap-2 text-xs text-slate-600">
+                        <CheckCircle2 size={12} className="text-primary-600 shrink-0 mt-0.5" />
+                        <span>{item}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              {marketingFeatures.slice(6, 11).map((feature) => {
+                const Icon = feature.icon;
+                return (
+                  <div key={feature.title} className="rounded-2xl border border-slate-200 bg-white p-5">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${feature.accent}`}>
+                        <Icon size={18} />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">{feature.badge}</p>
+                        <h4 className="text-sm font-semibold text-slate-900 capitalize">{feature.title}</h4>
+                      </div>
+                    </div>
+                    <p className="text-sm text-slate-500 leading-relaxed">{feature.description}</p>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </section>
@@ -270,9 +347,10 @@ export default function LandingPage() {
 
             {[
               { feature: "Data Entry", old: "Manual typing", new: "Automated AI extraction", highlight: true },
-              { feature: "Duplicate Check", old: "No duplicate check", new: "Smart duplicate detection", highlight: false },
-              { feature: "Line Items", old: "Basic OCR text", new: "Structured JSON table data", highlight: true },
-              { feature: "Workflow", old: "Chaotic emails", new: "End-to-end processing app", highlight: false },
+              { feature: "Duplicate Check", old: "No duplicate check", new: "Multi-signal duplicate detection", highlight: false },
+              { feature: "Line Items", old: "Basic OCR text", new: "Structured table data", highlight: true },
+              { feature: "Team & Approvals", old: "Email threads", new: "Shared queue with role-based access", highlight: false },
+              { feature: "Accounting Export", old: "Manual reformatting", new: "CSV, Excel, QuickBooks, Xero", highlight: true },
             ].map((row, i) => (
               <div key={i} className={`grid grid-cols-3 p-6 border-b border-slate-100 ${row.highlight ? 'bg-slate-50/50' : ''}`}>
                 <div className="col-span-1 font-medium text-slate-900 flex items-center">{row.feature}</div>

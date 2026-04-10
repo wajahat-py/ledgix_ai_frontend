@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mail, Lock, User, Building2, ArrowRight, Loader2, CheckCircle2, RefreshCw } from "lucide-react";
@@ -13,7 +14,7 @@ interface FieldErrors {
     password?: string;
 }
 
-type PageState = "form" | "email_sent" | "unverified" | "google_account";
+type PageState = "form" | "email_sent" | "unverified" | "google_account" | "email_exists";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://127.0.0.1:8000";
 
@@ -44,6 +45,17 @@ function GoogleLogo({ size = 18 }: { size?: number }) {
 }
 
 export default function RegisterPage() {
+    return (
+        <Suspense>
+            <RegisterPageInner />
+        </Suspense>
+    );
+}
+
+function RegisterPageInner() {
+    const searchParams = useSearchParams();
+    const plan = searchParams.get("plan") ?? "free";
+
     const [pageState, setPageState]       = useState<PageState>("form");
     const [submittedEmail, setSubmittedEmail] = useState("");
 
@@ -88,6 +100,7 @@ export default function RegisterPage() {
                 body:    JSON.stringify({
                     full_name: name, email, company_name: company,
                     password, password2: password,
+                    plan: plan,
                 }),
             });
             const data = await res.json();
@@ -102,6 +115,13 @@ export default function RegisterPage() {
             if (data.code === "google_account") {
                 setSubmittedEmail(email);
                 setPageState("google_account");
+                return;
+            }
+
+            // Existing email/password account
+            if (data.code === "email_exists") {
+                setSubmittedEmail(email);
+                setPageState("email_exists");
                 return;
             }
 
@@ -140,7 +160,10 @@ export default function RegisterPage() {
 
     const handleGoogleSignIn = async () => {
         setGoogleLoading(true);
-        await signIn("google", { callbackUrl: "/dashboard" });
+        // Store intended plan in a cookie so the backend GoogleAuthView can read it
+        document.cookie = `intended_plan=${plan}; path=/; max-age=300; SameSite=Lax`;
+        const callbackUrl = plan === "pro" ? "/dashboard?upgrade=pro" : "/dashboard";
+        await signIn("google", { callbackUrl });
     };
 
     const inputClass = (field: keyof FieldErrors) =>
@@ -150,16 +173,20 @@ export default function RegisterPage() {
 
     // ── page title / subtitle ─────────────────────────────────────────────────
     const titles: Record<PageState, string> = {
-        form:           "Create an account",
+        form:           plan === "pro" ? "Sign up for Pro" : "Create an account",
         email_sent:     "Check your inbox",
         unverified:     "Verify your email",
         google_account: "Already have an account",
+        email_exists:   "Already have an account",
     };
     const subtitles: Record<PageState, string> = {
-        form:           "Get started with automated invoice processing today.",
-        email_sent:     `We sent a verification link to ${submittedEmail}`,
+        form:           plan === "pro" 
+            ? "Complete your details to start your Pro subscription."
+            : "Get started with automated invoice processing today.",
+        email_sent:     `We sent a verification link to ${submittedEmail}. ${plan === "pro" ? "Verify to complete your subscription." : ""}`,
         unverified:     "This email is registered but not yet verified.",
         google_account: `${submittedEmail} is linked to a Google account.`,
+        email_exists:   `${submittedEmail} is already registered.`,
     };
 
     return (
@@ -204,7 +231,7 @@ export default function RegisterPage() {
                                     <CheckCircle2 size={24} className="text-green-600" />
                                 </div>
                                 <p className="text-slate-600 text-[13px] leading-relaxed mb-5">
-                                    Click the link in your email to activate your account. Check your spam folder if you don&apos;t see it.
+                                    Click the link in your email to activate your account. {plan === "pro" ? "You'll then be redirected to complete your payment." : "Check your spam folder if you don't see it."}
                                 </p>
                                 <button
                                     onClick={handleResend} disabled={resendLoading}
@@ -261,6 +288,32 @@ export default function RegisterPage() {
                                     {googleLoading ? <Loader2 size={14} className="animate-spin text-slate-400" /> : <GoogleLogo size={16} />}
                                     {googleLoading ? "Redirecting…" : "Continue with Google"}
                                 </button>
+                                <button
+                                    onClick={() => { setPageState("form"); setResendMessage(""); }}
+                                    className="mt-3 text-[12px] text-slate-400 hover:text-slate-700 transition-colors"
+                                >
+                                    Use a different email
+                                </button>
+                            </motion.div>
+                        )}
+
+                        {/* ── Existing email/password account ── */}
+                        {pageState === "email_exists" && (
+                            <motion.div key="email_exists" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-4">
+                                <div className="w-12 h-12 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center mx-auto mb-4">
+                                    <User size={20} className="text-slate-600" />
+                                </div>
+                                <p className="text-slate-900 font-semibold mb-1">Email already registered</p>
+                                <p className="text-slate-500 text-[13px] mb-5 leading-relaxed">
+                                    <span className="font-medium text-slate-700">{submittedEmail}</span> already has an account.
+                                    Sign in instead.
+                                </p>
+                                <Link
+                                    href="/login"
+                                    className="w-full flex justify-center items-center gap-2 py-2.5 px-4 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-sm font-semibold transition-colors"
+                                >
+                                    Sign in <ArrowRight size={14} />
+                                </Link>
                                 <button
                                     onClick={() => { setPageState("form"); setResendMessage(""); }}
                                     className="mt-3 text-[12px] text-slate-400 hover:text-slate-700 transition-colors"
@@ -378,7 +431,7 @@ export default function RegisterPage() {
 
                 <p className="mt-5 text-center text-[13px] text-slate-500">
                     Already have an account?{" "}
-                    <Link href="/login" className="font-medium text-slate-900 hover:text-slate-700 transition-colors">
+                    <Link href={`/login${plan === "pro" ? "?plan=pro" : ""}`} className="font-medium text-slate-900 hover:text-slate-700 transition-colors">
                         Sign in
                     </Link>
                 </p>

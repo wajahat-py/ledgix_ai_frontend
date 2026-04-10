@@ -11,8 +11,8 @@ interface AppHeaderProps {
 
 export default function AppHeader({ title, isDemo = false }: AppHeaderProps) {
   return (
-    <header className="h-14 flex items-center justify-between px-6 border-b border-slate-200 bg-white sticky top-0 z-20 shrink-0">
-      <h1 className="text-[15px] font-semibold text-slate-900 tracking-tight">{title}</h1>
+    <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center justify-between border-b border-slate-200 bg-white px-4 md:px-6">
+      <h1 className="truncate pr-3 text-[15px] font-semibold tracking-tight text-slate-900">{title}</h1>
 
       <div className="flex items-center gap-2">
         <NotificationBell />

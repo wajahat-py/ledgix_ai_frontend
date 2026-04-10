@@ -7,14 +7,17 @@ import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import {
     Search, ChevronDown, CheckCircle2, AlertCircle,
-    Clock, Loader2, FileText, UploadCloud, Eye, Play, Trash2, AlertTriangle,
+    Loader2, FileText, UploadCloud, Eye, Play, Trash2, AlertTriangle,
+    Download, FileSpreadsheet, FileType2, BookOpen, RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
 import Sidebar from "@/components/Sidebar";
 import AppHeader from "@/components/AppHeader";
 import { useInvoiceSocket } from "@/hooks/useInvoiceSocket";
+import { useOrg } from "@/lib/org-context";
 import type { Invoice, InvoiceStatus } from "@/types/invoice";
+import { exportCSV, exportExcel, exportPDF, exportQuickBooks, exportXero } from "@/lib/invoice-export";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000";
 
@@ -150,6 +153,7 @@ export default function InvoicesPage() {
 
 function InvoicesPageInner() {
     const { data: session } = useSession();
+    const { canUpload, canDeleteAny, role } = useOrg();
     const router = useRouter();
     const searchParams = useSearchParams();
     const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -164,6 +168,9 @@ function InvoicesPageInner() {
     const [deleteTarget, setDeleteTarget] = useState<Invoice | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
     const [showDuplicatesOnly, setShowDuplicatesOnly] = useState<boolean>(() => searchParams.get("duplicates") === "true");
+    const [exportOpen, setExportOpen] = useState(false);
+    const [exporting, setExporting] = useState(false);
+    const exportMenuRef = useRef<HTMLDivElement>(null);
 
     const invoicesRef = useRef<Invoice[]>([]);
     invoicesRef.current = invoices;
@@ -204,6 +211,49 @@ function InvoicesPageInner() {
             list.map((inv) => inv.id === updated.id ? updated : inv)
         );
     });
+
+    // Close export dropdown when clicking outside
+    useEffect(() => {
+        if (!exportOpen) return;
+        function onClickOutside(e: MouseEvent) {
+            if (exportMenuRef.current && !exportMenuRef.current.contains(e.target as Node)) {
+                setExportOpen(false);
+            }
+        }
+        document.addEventListener("mousedown", onClickOutside);
+        return () => document.removeEventListener("mousedown", onClickOutside);
+    }, [exportOpen]);
+
+    async function handleExport(format: "csv" | "excel" | "pdf" | "quickbooks" | "xero") {
+        if (filtered.length === 0) {
+            toast.error("No invoices to export. Adjust your filters.");
+            return;
+        }
+        setExportOpen(false);
+        setExporting(true);
+        try {
+            if (format === "csv") {
+                exportCSV(filtered);
+                toast.success(`Exported ${filtered.length} invoice${filtered.length > 1 ? "s" : ""} as CSV.`);
+            } else if (format === "excel") {
+                await exportExcel(filtered);
+                toast.success(`Exported ${filtered.length} invoice${filtered.length > 1 ? "s" : ""} as Excel.`);
+            } else if (format === "pdf") {
+                await exportPDF(filtered);
+                toast.success(`Exported ${filtered.length} invoice${filtered.length > 1 ? "s" : ""} as PDF.`);
+            } else if (format === "quickbooks") {
+                exportQuickBooks(filtered);
+                toast.success(`QuickBooks IIF file downloaded (${filtered.length} invoice${filtered.length > 1 ? "s" : ""}).`);
+            } else if (format === "xero") {
+                exportXero(filtered);
+                toast.success(`Xero import CSV downloaded (${filtered.length} invoice${filtered.length > 1 ? "s" : ""}).`);
+            }
+        } catch {
+            toast.error("Export failed. Please try again.");
+        } finally {
+            setExporting(false);
+        }
+    }
 
     async function handleProcess(invoice: Invoice) {
         if (!session?.accessToken) return;
@@ -298,11 +348,11 @@ function InvoicesPageInner() {
             <div className="min-h-screen bg-slate-50 flex">
                 <Sidebar />
 
-                <main className="flex-1 flex flex-col overflow-hidden">
+                <main className="flex min-w-0 flex-1 flex-col overflow-hidden">
                     <AppHeader title="Invoices" />
 
-                    <div className="flex-1 overflow-auto p-4 md:p-6">
-                        <div className="bg-white border border-slate-200 rounded-xl flex flex-col overflow-hidden">
+                    <div className="flex-1 overflow-auto p-4 pb-24 md:p-6 md:pb-6">
+                        <div className="bg-white border border-slate-200 rounded-xl flex flex-col">
 
                             {/* Controls */}
                             <div className="px-4 py-3 border-b border-slate-200 flex flex-col sm:flex-row gap-2 justify-between items-center">
@@ -349,12 +399,90 @@ function InvoicesPageInner() {
                                         )}
                                     </button>
 
-                                    <Link
-                                        href="/upload"
-                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 rounded-lg text-[12px] text-white font-medium transition-colors whitespace-nowrap"
-                                    >
-                                        <UploadCloud size={13} /> Upload
-                                    </Link>
+                                    {/* Export dropdown */}
+                                    <div className="relative" ref={exportMenuRef}>
+                                        <button
+                                            onClick={() => setExportOpen((v) => !v)}
+                                            disabled={exporting}
+                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 hover:border-slate-300 rounded-lg text-[12px] text-slate-600 hover:text-slate-800 font-medium transition-colors whitespace-nowrap disabled:opacity-50"
+                                        >
+                                            {exporting
+                                                ? <Loader2 size={12} className="animate-spin" />
+                                                : <Download size={12} />}
+                                            Export
+                                            <ChevronDown size={10} className={`transition-transform ${exportOpen ? "rotate-180" : ""}`} />
+                                        </button>
+
+                                        <AnimatePresence>
+                                            {exportOpen && (
+                                                <motion.div
+                                                    initial={{ opacity: 0, scale: 0.96, y: -4 }}
+                                                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                                                    exit={{ opacity: 0, scale: 0.96, y: -4 }}
+                                                    transition={{ duration: 0.12 }}
+                                                    className="absolute right-0 top-full mt-1.5 w-52 bg-white border border-slate-200 rounded-xl shadow-lg z-50"
+                                                >
+                                                    <div className="px-3 py-2 border-b border-slate-100">
+                                                        <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                                                            Export {filtered.length} invoice{filtered.length !== 1 ? "s" : ""}
+                                                        </p>
+                                                    </div>
+
+                                                    <div className="py-1">
+                                                        <p className="px-3 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400">Standard</p>
+                                                        <button
+                                                            onClick={() => handleExport("csv")}
+                                                            className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] text-slate-700 hover:bg-slate-50 transition-colors"
+                                                        >
+                                                            <FileText size={13} className="text-slate-400 shrink-0" />
+                                                            CSV (.csv)
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleExport("excel")}
+                                                            className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] text-slate-700 hover:bg-slate-50 transition-colors"
+                                                        >
+                                                            <FileSpreadsheet size={13} className="text-green-600 shrink-0" />
+                                                            Excel (.xlsx)
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleExport("pdf")}
+                                                            className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] text-slate-700 hover:bg-slate-50 transition-colors"
+                                                        >
+                                                            <FileType2 size={13} className="text-red-500 shrink-0" />
+                                                            PDF (.pdf)
+                                                        </button>
+                                                    </div>
+
+                                                    <div className="py-1 border-t border-slate-100">
+                                                        <p className="px-3 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400">Accounting Import</p>
+                                                        <button
+                                                            onClick={() => handleExport("quickbooks")}
+                                                            className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] text-slate-700 hover:bg-slate-50 transition-colors"
+                                                        >
+                                                            <BookOpen size={13} className="text-blue-500 shrink-0" />
+                                                            QuickBooks (.iif)
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleExport("xero")}
+                                                            className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] text-slate-700 hover:bg-slate-50 transition-colors"
+                                                        >
+                                                            <RefreshCw size={13} className="text-sky-500 shrink-0" />
+                                                            Xero CSV (.csv)
+                                                        </button>
+                                                    </div>
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+                                    </div>
+
+                                    {canUpload && (
+                                        <Link
+                                            href="/upload"
+                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 rounded-lg text-[12px] text-white font-medium transition-colors whitespace-nowrap"
+                                        >
+                                            <UploadCloud size={13} /> Upload
+                                        </Link>
+                                    )}
                                 </div>
                             </div>
 
@@ -456,7 +584,7 @@ function InvoicesPageInner() {
                                                             </td>
                                                             <td className="px-5 py-3.5 whitespace-nowrap text-right">
                                                                 <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                    {(inv.status === "UPLOADED" || inv.status === "PROCESSING_FAILED") && (
+                                                                    {canUpload && (inv.status === "UPLOADED" || inv.status === "PROCESSING_FAILED") && (
                                                                         <button
                                                                             onClick={(e) => { e.stopPropagation(); handleProcess(inv); }}
                                                                             disabled={processingIds.has(inv.id)}
@@ -468,12 +596,14 @@ function InvoicesPageInner() {
                                                                             Process
                                                                         </button>
                                                                     )}
-                                                                    <button
-                                                                        onClick={(e) => { e.stopPropagation(); setDeleteTarget(inv); }}
-                                                                        className="inline-flex items-center gap-1 text-[11px] text-slate-400 hover:text-red-600 transition-colors"
-                                                                    >
-                                                                        <Trash2 size={10} /> Delete
-                                                                    </button>
+                                                                    {(canDeleteAny || role === "member") && (
+                                                                        <button
+                                                                            onClick={(e) => { e.stopPropagation(); setDeleteTarget(inv); }}
+                                                                            className="inline-flex items-center gap-1 text-[11px] text-slate-400 hover:text-red-600 transition-colors"
+                                                                        >
+                                                                            <Trash2 size={10} /> Delete
+                                                                        </button>
+                                                                    )}
                                                                     <span className="text-[11px] text-slate-400 group-hover:text-slate-600 transition-colors">
                                                                         Open →
                                                                     </span>

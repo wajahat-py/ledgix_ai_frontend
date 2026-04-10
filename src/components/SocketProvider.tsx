@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { SocketContext } from "@/hooks/useAppSocket";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000";
+const ENABLE_WS = process.env.NEXT_PUBLIC_ENABLE_WS !== "false";
 
 /**
  * Opens a single WebSocket connection for the authenticated user and
@@ -29,6 +30,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     }), []);
 
     useEffect(() => {
+        if (!ENABLE_WS) return;
         const token = session?.accessToken;
         if (!token) return;
         const accessToken: string = token;

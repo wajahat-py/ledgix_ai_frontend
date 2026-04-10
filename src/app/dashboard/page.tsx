@@ -1,9 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useState, useRef } from "react";
+import { Suspense, useCallback, useEffect, useState, useRef } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import AppHeader from "@/components/AppHeader";
+import PaymentGuard from "@/components/PaymentGuard";
+import { useOrg } from "@/lib/org-context";
 import { api } from "@/services/api";
 import { useInvoiceSocket } from "@/hooks/useInvoiceSocket";
 import { toast } from "sonner";
@@ -16,7 +19,7 @@ import type { Invoice } from "@/types/invoice";
 import {
     TrendingUp, TrendingDown, Minus,
     FileText, CheckCircle2, Clock, XCircle, Copy,
-    BarChart3,
+    BarChart3, Loader2,
 } from "lucide-react";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -280,11 +283,24 @@ const RANGES: { label: string; value: Range }[] = [
 ];
 
 export default function DashboardPage() {
+    return (
+        <Suspense>
+            <PaymentGuard>
+                <DashboardInner />
+            </PaymentGuard>
+        </Suspense>
+    );
+}
+
+function DashboardInner() {
+    const searchParams = useSearchParams();
     const [range, setRange] = useState<Range>("30d");
     const [data, setData] = useState<DashboardData | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [trendMetric, setTrendMetric] = useState<TrendMetric>("total_amount");
+    const { currentOrg } = useOrg();
+    const demoToastShown = useRef(false);
 
     const rangeRef = useRef(range);
     rangeRef.current = range;
@@ -307,6 +323,17 @@ export default function DashboardPage() {
     useEffect(() => {
         fetchDashboard(range);
     }, [range, fetchDashboard]);
+
+    useEffect(() => {
+        if (searchParams.get("demo") !== "1" || demoToastShown.current) return;
+        demoToastShown.current = true;
+        toast.info("You're viewing a demo workspace with sample invoices.", {
+            description: currentOrg?.name
+                ? `${currentOrg.name} is preloaded for exploration.`
+                : "This workspace is preloaded for exploration.",
+        });
+        window.history.replaceState({}, "", "/dashboard");
+    }, [searchParams, currentOrg]);
 
     function scheduleRefresh() {
         if (refreshTimer.current) clearTimeout(refreshTimer.current);
@@ -337,6 +364,27 @@ export default function DashboardPage() {
         scheduleRefresh();
     });
 
+    if (loading && !data) {
+        return (
+            <div className="flex-1 flex min-h-0">
+                <Sidebar />
+                <div className="flex-1 flex flex-col min-w-0">
+                    <AppHeader title="Dashboard" />
+                    <main className="flex-1 space-y-6 p-4 pb-24 md:p-6 md:pb-6">
+                        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+                            {Array.from({ length: 6 }).map((_, i) => (
+                                <div key={i} className="bg-white border border-slate-200 rounded-xl p-5 animate-pulse">
+                                    <div className="h-2.5 bg-slate-100 rounded w-2/3 mb-4" />
+                                    <div className="h-6 bg-slate-100 rounded w-1/2 mb-2" />
+                                </div>
+                            ))}
+                        </div>
+                    </main>
+                </div>
+            </div>
+        );
+    }
+
     const s = data?.summary;
 
     return (
@@ -345,7 +393,7 @@ export default function DashboardPage() {
             <div className="flex-1 flex flex-col min-w-0">
                 <AppHeader title="Dashboard" />
 
-                <main className="flex-1 overflow-y-auto p-6 space-y-6">
+                <main className="flex-1 overflow-y-auto space-y-6 p-4 pb-24 md:p-6 md:pb-6">
 
                     {/* ── Range selector ── */}
                     <div className="flex items-center justify-between flex-wrap gap-3">

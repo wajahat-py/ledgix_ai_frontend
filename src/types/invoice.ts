@@ -37,6 +37,12 @@ export interface Invoice {
     extracted_data: Record<string, { value: unknown; confidence?: string | number }> | null;
     duplicate_check: DuplicateCheck | null;
     error_message: string;
+    // Audit trail
+    uploaded_by_name:  string;
+    approved_by_name:  string | null;
+    rejected_by_name:  string | null;
+    reviewed_at:       string | null;
+    rejection_reason:  string;
     created_at: string;
     updated_at: string;
 }

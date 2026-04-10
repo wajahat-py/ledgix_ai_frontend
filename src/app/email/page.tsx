@@ -85,12 +85,13 @@ function EmailPageInner() {
     useEffect(() => {
         const gmailParam = searchParams.get("gmail");
         const reason     = searchParams.get("reason");
-        if (!gmailParam) return;
+        if (!gmailParam || !session?.accessToken) return;
 
         if (gmailParam === "connected") {
             toast.success("Gmail connected! Scanning your inbox…");
             fetchStatus();
             setSyncing(true);
+            if (pollRef.current) clearInterval(pollRef.current);
             let ticks = 0;
             pollRef.current = setInterval(async () => {
                 ticks++;
@@ -109,8 +110,7 @@ function EmailPageInner() {
             toast.error(msg);
         }
         router.replace("/email");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [searchParams, session?.accessToken, fetchStatus, router]);
 
     useEffect(() => () => { if (pollRef.current) clearInterval(pollRef.current); }, []);
 
@@ -182,10 +182,10 @@ function EmailPageInner() {
         <div className="min-h-screen bg-slate-50 flex">
             <Sidebar />
 
-            <main className="flex-1 flex flex-col overflow-hidden">
+            <main className="flex min-w-0 flex-1 flex-col overflow-hidden">
                 <AppHeader title="Email Integration" />
 
-                <div className="flex-1 overflow-auto p-4 md:p-6 lg:p-8 space-y-5">
+                <div className="flex-1 overflow-auto p-4 pb-24 md:p-6 md:pb-6 lg:p-8 space-y-5">
 
                     {/* ── Plan limit banner ── */}
                     {atLimit && (
@@ -198,7 +198,7 @@ function EmailPageInner() {
                             <div className="flex-1 min-w-0">
                                 <p className="text-sm text-red-700 font-medium">Monthly limit reached</p>
                                 <p className="text-xs text-red-600 mt-0.5">
-                                    You&apos;ve used all {usage?.invoice_limit} invoices for this month. Gmail sync is paused until you upgrade.
+                                    You&apos;ve used all {usage?.invoice_limit ?? "your available"} invoices for this month. Gmail sync is paused until you upgrade.
                                 </p>
                             </div>
                             <a
@@ -369,7 +369,7 @@ function EmailPageInner() {
                             className="bg-white border border-slate-200 rounded-xl p-6"
                         >
                             <h3 className="text-sm font-semibold text-slate-900 mb-4 flex items-center gap-2">
-                                <AlertTriangle size={15} className="text-amber-500" /> How it works
+                             How it works
                             </h3>
                             <ol className="space-y-3">
                                 {[
@@ -377,7 +377,7 @@ function EmailPageInner() {
                                     "Ledgix scans emails with PDF or image attachments from the past 6 months.",
                                     "Attachments that look like invoices (by filename, subject, or sender) are auto-uploaded.",
                                     "Each invoice is immediately queued for AI extraction — no manual steps needed.",
-                                    "Your inbox is re-scanned every 2 minutes for new invoices.",
+                                    "Invoices are detected in realtime.",
                                 ].map((step, i) => (
                                     <li key={i} className="flex items-start gap-3 text-sm text-slate-500">
                                         <span className="w-6 h-6 rounded-full bg-slate-100 border border-slate-200 text-xs font-bold text-slate-600 flex items-center justify-center shrink-0 mt-0.5">

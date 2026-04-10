@@ -16,7 +16,7 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const APP_ROUTES = ["/dashboard", "/invoices", "/upload", "/email", "/profile"];
+  const APP_ROUTES = ["/dashboard", "/invoices", "/upload", "/email", "/profile", "/settings"];
   if (APP_ROUTES.some((r) => pathname === r || pathname.startsWith(`${r}/`))) return null;
 
   const navLinks = [
