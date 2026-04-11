@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
@@ -18,11 +18,13 @@ export default function VerifyEmailPage() {
 
 function VerifyEmailInner() {
     const searchParams = useSearchParams();
+    const router = useRouter();
     const token = searchParams.get("token");
 
     const [state, setState] = useState<"loading" | "success" | "error">("loading");
     const [message, setMessage] = useState("");
     const [verifiedPlan, setVerifiedPlan] = useState("free");
+    const [countdown, setCountdown] = useState(3);
 
     useEffect(() => {
         if (!token) {
@@ -49,6 +51,17 @@ function VerifyEmailInner() {
             });
     }, [token]);
 
+    // Auto-redirect to login after successful verification
+    useEffect(() => {
+        if (state !== "success") return;
+        if (countdown <= 0) {
+            router.push(`/login${verifiedPlan === "pro" ? "?plan=pro" : ""}`);
+            return;
+        }
+        const timer = setTimeout(() => setCountdown((c) => c - 1), 1000);
+        return () => clearTimeout(timer);
+    }, [state, countdown, router, verifiedPlan]);
+
     return (
         <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center px-4">
             <motion.div
@@ -70,12 +83,13 @@ function VerifyEmailInner() {
                             <CheckCircle2 size={28} className="text-green-600" />
                         </div>
                         <h2 className="text-xl font-semibold text-slate-900 mb-2">Email verified!</h2>
-                        <p className="text-slate-500 text-sm mb-6">{message}</p>
+                        <p className="text-slate-500 text-sm mb-2">{message}</p>
+                        <p className="text-slate-400 text-xs mb-6">Redirecting to sign in in {countdown}…</p>
                         <Link
                             href={`/login${verifiedPlan === "pro" ? "?plan=pro" : ""}`}
                             className="inline-flex items-center gap-2 px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-sm font-semibold transition-colors"
                         >
-                            Sign in to your account
+                            Sign in now
                         </Link>
                     </>
                 )}
@@ -89,13 +103,13 @@ function VerifyEmailInner() {
                         <p className="text-slate-500 text-sm mb-6">{message}</p>
                         <div className="flex flex-col gap-3">
                             <Link
-                                href="/register"
+                                href="/login"
                                 className="px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-sm font-semibold transition-colors"
                             >
-                                Back to sign up
+                                Sign in
                             </Link>
-                            <Link href="/login" className="text-sm text-slate-500 hover:text-slate-700 transition-colors">
-                                Already have an account? Sign in
+                            <Link href="/register" className="text-sm text-slate-500 hover:text-slate-700 transition-colors">
+                                Create a new account
                             </Link>
                         </div>
                     </>
