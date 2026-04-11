@@ -299,7 +299,7 @@ function DashboardInner() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [trendMetric, setTrendMetric] = useState<TrendMetric>("total_amount");
-    const { currentOrg } = useOrg();
+    const { org: currentOrg } = useOrg();
     const demoToastShown = useRef(false);
 
     const rangeRef = useRef(range);
