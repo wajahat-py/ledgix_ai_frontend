@@ -434,6 +434,12 @@ function proxyUrl(fileUrl: string) {
 
 function FilePreview({ fileUrl, filename }: { fileUrl: string; filename: string }) {
     const type = getFileType(filename);
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        // Detect touch-primary devices (phones, tablets) where PDF iframes don't render
+        setIsMobile(window.matchMedia("(pointer: coarse)").matches);
+    }, []);
 
     return (
         <div className="bg-white border border-slate-200 rounded-xl overflow-hidden flex flex-col h-full min-h-[400px]">
@@ -441,7 +447,7 @@ function FilePreview({ fileUrl, filename }: { fileUrl: string; filename: string 
                 <span className="text-xs font-medium text-slate-400">Original File</span>
                 <div className="flex items-center gap-3">
                     <a
-                        href={fileUrl}
+                        href={proxyUrl(fileUrl)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-700 transition-colors"
@@ -459,12 +465,30 @@ function FilePreview({ fileUrl, filename }: { fileUrl: string; filename: string 
             </div>
 
             <div className="flex-1 relative min-h-0">
-                {type === "pdf" && (
+                {type === "pdf" && !isMobile && (
                     <iframe
                         src={proxyUrl(fileUrl)}
                         title={filename}
                         className="absolute inset-0 w-full h-full border-0"
                     />
+                )}
+
+                {type === "pdf" && isMobile && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 p-6 text-center">
+                        <FileText size={48} className="text-slate-300" />
+                        <div>
+                            <p className="text-sm font-medium text-slate-700 mb-1">PDF Preview</p>
+                            <p className="text-xs text-slate-400">Tap the button below to open the PDF in your browser.</p>
+                        </div>
+                        <a
+                            href={proxyUrl(fileUrl)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-sm text-white rounded-lg transition-colors"
+                        >
+                            <ExternalLink size={14} /> Open PDF
+                        </a>
+                    </div>
                 )}
 
                 {type === "image" && (
