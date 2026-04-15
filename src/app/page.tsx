@@ -7,7 +7,8 @@ import {
   ArrowRight, FileText, Zap, ShieldCheck,
   BarChart3, UploadCloud, CheckCircle2,
   AlertCircle, Clock, Building2, UserCircle,
-  Mail, Download, Users,
+  Mail, Download, Users, Cpu, ScanLine,
+  Fingerprint, Filter, Search, Layers,
 } from "lucide-react";
 import { featureCategories, marketingFeatures } from "@/lib/marketing-features";
 
@@ -232,6 +233,90 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* TECHNICAL PIPELINE */}
+        <section className="max-w-5xl mx-auto">
+          <div className="text-center mb-12">
+            <p className="text-xs font-semibold uppercase tracking-widest text-primary-600 mb-3">Engineering Depth</p>
+            <h2 className="text-3xl md:text-4xl font-heading font-bold text-slate-900 mb-4">
+              The pipeline behind the automation
+            </h2>
+            <p className="text-slate-500 max-w-2xl mx-auto text-lg">
+              Not a basic AI wrapper. A full-stack document intelligence pipeline — from raw PDF to validated, structured data ready for your accounting system.
+            </p>
+          </div>
+
+          <div className="relative">
+            <div className="absolute left-8 top-8 bottom-8 w-px bg-gradient-to-b from-primary-500/40 via-slate-200 to-transparent hidden md:block"></div>
+
+            <div className="space-y-4">
+              {[
+                {
+                  num: "01", icon: UploadCloud,
+                  title: "Ingest",
+                  subtitle: "PDF · Image · Email attachment",
+                  desc: "Upload a PDF or image directly, or connect Gmail via OAuth to auto-import invoice attachments. No forwarding rules or manual steps required.",
+                  color: "text-blue-600", bg: "bg-blue-50",
+                },
+                {
+                  num: "02", icon: ScanLine,
+                  title: "OCR Extraction",
+                  subtitle: "Optical Character Recognition layer",
+                  desc: "A dedicated OCR pass converts the document — including scanned images and low-quality photos — into machine-readable text while preserving layout structure.",
+                  color: "text-violet-600", bg: "bg-violet-50",
+                },
+                {
+                  num: "03", icon: Cpu,
+                  title: "LLM Parsing",
+                  subtitle: "Large Language Model structured extraction",
+                  desc: "The OCR text is passed to an LLM with a strict schema prompt. It returns structured JSON: vendor, invoice number, dates, amount, and line items — each with a field-level confidence score.",
+                  color: "text-primary-600", bg: "bg-primary-50",
+                },
+                {
+                  num: "04", icon: ShieldCheck,
+                  title: "Validation",
+                  subtitle: "Schema & business rule checks",
+                  desc: "Every extracted field is validated against business rules — date formats, amount ranges, required fields. Invalid extractions are flagged for human review, never silently passed through.",
+                  color: "text-green-600", bg: "bg-green-50",
+                },
+                {
+                  num: "05", icon: Fingerprint,
+                  title: "Duplicate Detection",
+                  subtitle: "Multi-layer matching engine",
+                  desc: "Before saving, the invoice is checked against all existing records using a three-stage pipeline: exact rule matching, fuzzy string similarity, and semantic embedding comparison.",
+                  color: "text-rose-600", bg: "bg-rose-50",
+                },
+              ].map((step, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, x: -20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.1, duration: 0.5 }}
+                  className="relative flex gap-6 md:pl-20 items-start"
+                >
+                  <div className="hidden md:flex absolute left-0 w-16 h-16 rounded-full bg-white border-2 border-slate-200 items-center justify-center shrink-0 shadow-sm">
+                    <span className="font-mono font-bold text-slate-400 text-sm">{step.num}</span>
+                  </div>
+                  <div className="flex-1 bg-white border border-slate-200 rounded-2xl p-6 hover:border-slate-300 hover:shadow-sm transition-all">
+                    <div className="flex items-start gap-4">
+                      <div className={`w-10 h-10 rounded-xl ${step.bg} ${step.color} flex items-center justify-center shrink-0`}>
+                        <step.icon size={20} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-2 mb-1">
+                          <h3 className="text-base font-bold text-slate-900">{step.title}</h3>
+                          <span className="text-xs text-slate-400 font-mono">{step.subtitle}</span>
+                        </div>
+                        <p className="text-sm text-slate-500 leading-relaxed">{step.desc}</p>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* 4. FEATURES */}
         <section className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
@@ -361,6 +446,82 @@ export default function LandingPage() {
                 </div>
               </div>
             ))}
+          </div>
+        </section>
+
+        {/* DUPLICATE DETECTION ENGINE */}
+        <section className="max-w-5xl mx-auto">
+          <div className="rounded-3xl bg-slate-900 overflow-hidden">
+            <div className="p-8 md:p-12">
+              <div className="flex flex-col lg:flex-row gap-10 items-start">
+                <div className="flex-1">
+                  <p className="text-xs font-semibold uppercase tracking-widest text-rose-400 mb-3">Advanced Feature</p>
+                  <h2 className="text-3xl md:text-4xl font-heading font-bold text-white mb-4">
+                    Advanced Duplicate Detection Engine
+                  </h2>
+                  <p className="text-slate-400 text-lg leading-relaxed mb-6">
+                    Most tools do a simple invoice number check. Ledgix runs a three-stage matching pipeline that catches the duplicates other systems miss — before they ever reach approval.
+                  </p>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-sm text-slate-400">
+                      <CheckCircle2 size={16} className="text-rose-400 shrink-0" />
+                      <span>Prevents double payments across your entire invoice history</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-slate-400">
+                      <CheckCircle2 size={16} className="text-rose-400 shrink-0" />
+                      <span>Flags near-duplicates for review — not just exact matches</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-slate-400">
+                      <CheckCircle2 size={16} className="text-rose-400 shrink-0" />
+                      <span>Composite scoring combines all signals into one confidence value</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex-1 space-y-4 w-full">
+                  {[
+                    {
+                      layer: "Layer 1", icon: Filter,
+                      title: "Rule-Based Matching",
+                      desc: "Exact match on invoice number + vendor combination. Zero false positives — catches straightforward re-submissions instantly.",
+                      color: "text-rose-400", bg: "bg-rose-500/10", border: "border-rose-500/20",
+                    },
+                    {
+                      layer: "Layer 2", icon: Search,
+                      title: "Fuzzy String Similarity",
+                      desc: "Token overlap and edit distance catch reformatted invoice numbers and vendor name variations (e.g. \"AWS\" vs \"Amazon Web Services\").",
+                      color: "text-orange-400", bg: "bg-orange-500/10", border: "border-orange-500/20",
+                    },
+                    {
+                      layer: "Layer 3", icon: Layers,
+                      title: "Semantic Embedding Similarity",
+                      desc: "Vector embeddings of invoice content are compared using cosine similarity — catches near-duplicate invoices even when numbers and dates differ.",
+                      color: "text-yellow-400", bg: "bg-yellow-500/10", border: "border-yellow-500/20",
+                    },
+                  ].map((layer, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, x: 20 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: i * 0.15, duration: 0.5 }}
+                      className={`rounded-xl border ${layer.border} ${layer.bg} p-5`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className={`w-9 h-9 rounded-lg bg-white/5 ${layer.color} flex items-center justify-center shrink-0`}>
+                          <layer.icon size={18} />
+                        </div>
+                        <div>
+                          <p className={`text-[10px] font-semibold uppercase tracking-wide ${layer.color} mb-0.5`}>{layer.layer}</p>
+                          <h4 className="text-sm font-semibold text-white mb-1">{layer.title}</h4>
+                          <p className="text-xs text-slate-400 leading-relaxed">{layer.desc}</p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -566,6 +727,73 @@ export default function LandingPage() {
 
                 </div>
               </div>
+            </div>
+          </motion.div>
+        </section>
+
+        {/* REAL OUTPUT WITH CONFIDENCE SCORES */}
+        <section className="max-w-4xl mx-auto">
+          <div className="text-center mb-10">
+            <p className="text-xs font-semibold uppercase tracking-widest text-primary-600 mb-3">Real Output</p>
+            <h2 className="text-3xl md:text-4xl font-heading font-bold text-slate-900 mb-4">
+              See exactly what gets extracted
+            </h2>
+            <p className="text-slate-500 max-w-2xl mx-auto text-lg">
+              Every field ships with a confidence score. Low-confidence extractions are flagged for human review — nothing passes through silently.
+            </p>
+          </div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="rounded-2xl border border-slate-200 overflow-hidden shadow-sm bg-white"
+          >
+            <div className="grid grid-cols-3 bg-slate-50 px-6 py-4 border-b border-slate-200">
+              <div className="text-xs font-semibold uppercase tracking-widest text-slate-400">Field</div>
+              <div className="text-xs font-semibold uppercase tracking-widest text-slate-400">Extracted Value</div>
+              <div className="text-xs font-semibold uppercase tracking-widest text-slate-400">Confidence</div>
+            </div>
+
+            {[
+              { field: "Vendor Name",     value: "Zentech LLC",       confidence: 98 },
+              { field: "Invoice Number",  value: "INV-2024-0041",     confidence: 99 },
+              { field: "Invoice Date",    value: "Mar 14, 2024",      confidence: 97 },
+              { field: "Due Date",        value: "Apr 13, 2024",      confidence: 96 },
+              { field: "Amount Due",      value: "$2,322.00",         confidence: 99 },
+              { field: "Line Item 1",     value: "Cloud Hosting × 3", confidence: 91 },
+              { field: "Line Item 2",     value: "Support Hours × 8", confidence: 88 },
+              { field: "Tax Rate",        value: "—",                 confidence: 43, flagged: true },
+            ].map((row, i) => {
+              const isHigh = row.confidence >= 80;
+              const barColor = row.confidence >= 90 ? "bg-green-500" : row.confidence >= 70 ? "bg-yellow-500" : "bg-red-400";
+              const textColor = row.confidence >= 90 ? "text-green-600" : row.confidence >= 70 ? "text-yellow-600" : "text-red-500";
+              return (
+                <div
+                  key={i}
+                  className={`grid grid-cols-3 px-6 py-4 border-b border-slate-100 last:border-0 items-center ${row.flagged ? "bg-amber-50/60" : ""}`}
+                >
+                  <div className="text-sm font-medium text-slate-700">{row.field}</div>
+                  <div className={`text-sm font-mono ${isHigh ? "text-slate-900" : "text-slate-400 italic"}`}>{row.value}</div>
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden max-w-[72px]">
+                      <div className={`h-full rounded-full ${barColor}`} style={{ width: `${row.confidence}%` }}></div>
+                    </div>
+                    <span className={`text-sm font-semibold tabular-nums min-w-[36px] ${textColor}`}>{row.confidence}%</span>
+                    {row.flagged && (
+                      <span className="text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium whitespace-nowrap">Review</span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+
+            <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2">
+              <span className="text-xs text-slate-500">7 of 8 fields extracted with high confidence</span>
+              <span className="text-xs font-medium text-primary-600 flex items-center gap-1">
+                <CheckCircle2 size={12} /> Ready for approval
+              </span>
             </div>
           </motion.div>
         </section>
