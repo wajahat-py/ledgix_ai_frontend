@@ -171,7 +171,7 @@ function personalizedCTA(decision: Decision | null, hasDuplicate: boolean) {
   };
   return {
     title: "Ready to process your real invoices?",
-    desc:  "Sign up free — first 50 invoices included, no credit card required.",
+    desc:  "Contact us to set up your own workspace — custom integrations available.",
   };
 }
 
@@ -512,7 +512,7 @@ function VolumeSimulator() {
             <p className="text-slate-400 text-[12px] mt-0.5">≈ ${savedDollars.toLocaleString()} in labour at $40/hr</p>
           </div>
           <Link
-            href="/register"
+            href="/contact"
             className="shrink-0 flex items-center gap-1.5 px-4 py-2 bg-white hover:bg-slate-100 text-slate-900 text-[12px] font-semibold rounded-lg transition-colors"
           >
             Start saving <ArrowRight size={13} />
@@ -672,8 +672,8 @@ export default function DemoPage() {
             Use demo account
           </Link>{" "}
           or{" "}
-          <Link href="/register" className="font-semibold text-white underline underline-offset-2 hover:text-slate-200 transition-colors">
-            Sign up
+          <Link href="/contact" className="font-semibold text-white underline underline-offset-2 hover:text-slate-200 transition-colors">
+            Contact us
           </Link>
         </div>
       </div>
@@ -728,7 +728,7 @@ export default function DemoPage() {
                   Ready for your real ones?
                 </p>
                 <Link
-                  href="/register"
+                  href="/contact"
                   className="flex items-center justify-center gap-1.5 w-full py-2 bg-slate-900 hover:bg-slate-800 text-white text-[13px] font-semibold rounded-lg transition-colors"
                 >
                   Get Started Free <ArrowRight size={13} />
@@ -1058,7 +1058,7 @@ export default function DemoPage() {
                     <p className="text-slate-400 text-[13px] mt-0.5">{ctaContent.desc}</p>
                   </div>
                   <Link
-                    href="/register"
+                    href="/contact"
                     className="shrink-0 flex items-center gap-2 px-5 py-2.5 bg-white hover:bg-slate-100 text-slate-900 text-[13px] font-semibold rounded-lg transition-colors"
                   >
                     Get Started Free <ArrowRight size={14} />

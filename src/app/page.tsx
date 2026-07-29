@@ -8,7 +8,7 @@ import {
   BarChart3, UploadCloud, CheckCircle2,
   AlertCircle, Clock, Building2, UserCircle,
   Mail, Download, Users, Cpu, ScanLine,
-  Fingerprint, Filter, Search, Layers,
+  Fingerprint, Filter, Search, Layers, MessageSquare, Sparkles,
 } from "lucide-react";
 import { featureCategories, marketingFeatures } from "@/lib/marketing-features";
 
@@ -66,30 +66,31 @@ export default function LandingPage() {
 
             <div className="flex flex-col sm:flex-row items-center gap-4">
               <Link
-                href="/demo"
+                href="/login"
                 className="w-full sm:w-auto px-8 py-4 bg-slate-900 hover:bg-slate-800 text-white rounded-full font-semibold transition-all flex items-center justify-center gap-2"
               >
-                Try Demo <ArrowRight size={18} />
+                <Zap size={18} />
+                Try Demo
               </Link>
               <Link
-                href="/register"
+                href="/contact"
                 className="w-full sm:w-auto px-8 py-4 bg-white hover:bg-slate-50 text-slate-900 rounded-full font-semibold transition-all flex items-center justify-center gap-2 border border-slate-200"
               >
-                Sign Up
+                Contact Sales
               </Link>
             </div>
 
             <p className="mt-3 text-sm text-slate-500">
-              Or explore full dashboard instantly using the{" "}
-              <Link href="/login?demo=1" className="font-medium text-slate-900 underline underline-offset-2 transition-colors hover:text-slate-700">
-                demo account
+              Experience the full platform instantly with our{" "}
+              <Link href="/login" className="font-medium text-slate-900 underline underline-offset-2 transition-colors hover:text-slate-700">
+                interactive demo
               </Link>
-              .
+              {" "}— no signup required.
             </p>
 
             <div className="mt-8 flex items-center gap-4 text-sm text-slate-500">
-              <span className="flex items-center gap-1"><CheckCircle2 size={16} className="text-primary-600" /> No credit card required</span>
-              <span className="flex items-center gap-1"><CheckCircle2 size={16} className="text-primary-600" /> Free to get started</span>
+              <span className="flex items-center gap-1"><CheckCircle2 size={16} className="text-primary-600" /> Enterprise solutions available</span>
+              <span className="flex items-center gap-1"><CheckCircle2 size={16} className="text-primary-600" /> Custom integrations</span>
             </div>
           </motion.div>
 

@@ -7,7 +7,7 @@ import {
   CheckCircle2, AlertTriangle, FileText,
   Download, Users, Eye, CheckSquare,
   FileSpreadsheet, BookOpen, RefreshCw,
-  Play, Pencil, Wifi,
+  Play, Pencil, Wifi, Sparkles,
 } from "lucide-react";
 import { featureCategories, marketingFeatures } from "@/lib/marketing-features";
 
@@ -463,14 +463,15 @@ export default function FeaturesPage() {
             Ready to cut the manual work?
           </h2>
           <p className="text-xl text-slate-400 mb-10 max-w-xl mx-auto">
-            Sign up free and start processing invoices today — no credit card required.
+            Try our interactive demo or contact us to set up your own workspace.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <Link
-              href="/register"
-              className="px-8 py-4 bg-white hover:bg-slate-100 text-slate-900 font-semibold rounded-xl transition-all flex items-center justify-center gap-2"
+              href="/login"
+              className="px-8 py-4 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2"
             >
-              Get started free <ArrowRight size={18} />
+              <Sparkles size={18} />
+              Try Demo <ArrowRight size={18} />
             </Link>
             <Link
               href="/demo"

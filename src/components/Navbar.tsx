@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FileText, Menu, X } from "lucide-react";
+import { FileText, Menu, X, MessageSquare, Sparkles } from "lucide-react";
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -22,7 +22,7 @@ export default function Navbar() {
   const navLinks = [
     { name: "Features", href: "/features" },
     { name: "Pricing",  href: "/pricing"  },
-    { name: "Demo",     href: "/demo"     },
+    { name: "Demo",     href: "/login"     },
   ];
 
   return (
@@ -56,24 +56,26 @@ export default function Navbar() {
                   : "text-slate-500 hover:text-slate-900"
               }`}
             >
-              {link.name}
+              {link.name === "Demo" ? (
+                <span className="inline-flex items-center gap-1">
+                  <Sparkles size={12} />
+                  Demo
+                </span>
+              ) : (
+                link.name
+              )}
             </Link>
           ))}
         </nav>
 
-        {/* Auth buttons */}
+        {/* CTA Button */}
         <div className="hidden md:flex items-center gap-3">
           <Link
-            href="/login"
-            className="text-[13px] font-medium text-slate-500 hover:text-slate-900 transition-colors"
+            href="/contact"
+            className="text-[13px] font-semibold bg-slate-900 text-white px-4 py-1.5 rounded-full hover:bg-slate-800 transition-colors inline-flex items-center gap-1.5"
           >
-            Log in
-          </Link>
-          <Link
-            href="/register"
-            className="text-[13px] font-semibold bg-slate-900 text-white px-4 py-1.5 rounded-full hover:bg-slate-800 transition-colors"
-          >
-            Get started free
+            <MessageSquare size={13} />
+            Contact Sales
           </Link>
         </div>
 
@@ -97,23 +99,24 @@ export default function Navbar() {
               onClick={() => setMobileMenuOpen(false)}
               className="text-[15px] font-medium text-slate-600 hover:text-slate-900 px-3 py-2.5 rounded-lg hover:bg-slate-50 transition-colors"
             >
-              {link.name}
+              {link.name === "Demo" ? (
+                <span className="inline-flex items-center gap-2">
+                  <Sparkles size={14} />
+                  Demo
+                </span>
+              ) : (
+                link.name
+              )}
             </Link>
           ))}
           <div className="h-px bg-slate-200 my-2" />
           <Link
-            href="/login"
+            href="/contact"
             onClick={() => setMobileMenuOpen(false)}
-            className="text-[15px] font-medium text-slate-600 hover:text-slate-900 px-3 py-2.5 rounded-lg hover:bg-slate-50 transition-colors"
+            className="text-[15px] font-semibold bg-slate-900 text-white px-4 py-3 rounded-xl text-center hover:bg-slate-800 transition-colors flex items-center justify-center gap-2"
           >
-            Log in
-          </Link>
-          <Link
-            href="/register"
-            onClick={() => setMobileMenuOpen(false)}
-            className="text-[15px] font-semibold bg-slate-900 text-white px-4 py-3 rounded-xl text-center hover:bg-slate-800 transition-colors mt-1"
-          >
-            Get started free
+            <MessageSquare size={16} />
+            Contact Sales
           </Link>
         </div>
       )}

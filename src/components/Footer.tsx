@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FileText, ArrowRight, Zap } from "lucide-react";
+import { FileText, ArrowRight, Sparkles, MessageSquare } from "lucide-react";
 
 export default function Footer() {
   const pathname = usePathname();
@@ -23,20 +23,21 @@ export default function Footer() {
               </span>
             </Link>
             <p className="text-slate-500 text-sm mb-6 leading-relaxed">
-              AI-powered invoice automation for accounting firms, freelancers, and finance teams.
+              AI-powered invoice automation for modern businesses.
             </p>
             <div className="flex gap-3">
               <Link
-                href="/register"
+                href="/contact"
                 className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2"
               >
-                Get Started <ArrowRight size={15} />
+                <MessageSquare size={15} />
+                Contact Sales
               </Link>
               <Link
-                href="/demo"
+                href="/login"
                 className="px-5 py-2.5 bg-white hover:bg-slate-50 text-slate-700 text-sm font-medium rounded-lg transition-colors border border-slate-200 flex items-center gap-2"
               >
-                <Zap size={15} className="text-primary-600" /> Try Demo
+                <Sparkles size={15} className="text-primary-600" /> Try Demo
               </Link>
             </div>
           </div>
@@ -46,8 +47,8 @@ export default function Footer() {
             <h3 className="text-slate-900 font-semibold mb-4 text-sm uppercase tracking-wider">Product</h3>
             <ul className="flex flex-col gap-3 text-sm text-slate-500">
               <li><Link href="/features" className="hover:text-slate-900 transition-colors">Features</Link></li>
-              <li><Link href="/demo" className="hover:text-slate-900 transition-colors">Interactive Demo</Link></li>
               <li><Link href="/pricing" className="hover:text-slate-900 transition-colors">Pricing</Link></li>
+              <li><Link href="/contact" className="hover:text-slate-900 transition-colors">Contact</Link></li>
             </ul>
           </div>
         </div>

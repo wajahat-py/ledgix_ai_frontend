@@ -1,6 +1,5 @@
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import GoogleProvider from "next-auth/providers/google";
 import type { JWT } from "next-auth/jwt";
 
 const backendUrl =
@@ -33,18 +32,6 @@ async function refreshAccessToken(token: JWT): Promise<JWT> {
 
 export const authOptions: NextAuthOptions = {
     providers: [
-        GoogleProvider({
-            clientId:     process.env.GOOGLE_CLIENT_ID_AUTH!,
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET_AUTH!,
-            authorization: {
-                params: {
-                    prompt: "select_account",
-                    access_type: "online",
-                    response_type: "code",
-                },
-            },
-        }),
-
         CredentialsProvider({
             name: "Credentials",
             credentials: {
@@ -88,37 +75,8 @@ export const authOptions: NextAuthOptions = {
     ],
 
     callbacks: {
-        async jwt({ token, user, account }) {
-            // ── Google OAuth sign-in ──────────────────────────────────────────
-            if (account?.provider === "google") {
-                const idToken = account.id_token;
-                if (!idToken) {
-                    return { ...token, error: "GoogleAuthError" };
-                }
-                try {
-                    const res = await fetch(`${backendUrl}/api/auth/google/`, {
-                        method:  "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body:    JSON.stringify({ id_token: idToken }),
-                    });
-                    if (!res.ok) {
-                        const err = await res.json().catch(() => ({}));
-                        return { ...token, error: (err as { detail?: string }).detail || "GoogleAuthError" };
-                    }
-                    const data = await res.json();
-                    return {
-                        ...token,
-                        accessToken:       data.access,
-                        refreshToken:      data.refresh,
-                        accessTokenExpiry: Date.now() + ACCESS_TOKEN_LIFETIME_MS,
-                        error:             undefined,
-                    };
-                } catch {
-                    return { ...token, error: "GoogleAuthError" };
-                }
-            }
-
-            // ── Credentials sign-in ───────────────────────────────────────────
+        async jwt({ token, user }) {
+            // Credentials sign-in
             if (user) {
                 return {
                     ...token,
@@ -128,12 +86,12 @@ export const authOptions: NextAuthOptions = {
                 };
             }
 
-            // ── Access token still valid ──────────────────────────────────────
+            // Access token still valid
             if (Date.now() < (token.accessTokenExpiry as number) - REFRESH_BUFFER_MS) {
                 return token;
             }
 
-            // ── Refresh ───────────────────────────────────────────────────────
+            // Refresh
             return refreshAccessToken(token);
         },
 
